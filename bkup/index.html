@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ECC CSR Assistant &amp; Script Generator</title>
+  <title>ECC CSR Assistant & Script Generator</title>
   <style>
     :root{
       --bg:#f4f7fb;
@@ -354,33 +354,6 @@
       margin-top:4px;
     }
 
-    .mini.pass{
-      background:var(--ok-bg);
-      border-color:#86efac;
-    }
-
-    .mini.pass .n{
-      color:#166534;
-    }
-
-    .mini.warn{
-      background:var(--warn-bg);
-      border-color:#fdba74;
-    }
-
-    .mini.warn .n{
-      color:#9a3412;
-    }
-
-    .mini.fail{
-      background:var(--bad-bg);
-      border-color:#fca5a5;
-    }
-
-    .mini.fail .n{
-      color:#991b1b;
-    }
-
     .status-grid{
       display:grid;
       gap:10px;
@@ -391,26 +364,6 @@
       border-radius:14px;
       padding:12px 14px;
       background:#fff;
-    }
-
-    .status-item.pass{
-      background:var(--ok-bg);
-      border-color:#86efac;
-    }
-
-    .status-item.warn{
-      background:var(--warn-bg);
-      border-color:#fdba74;
-    }
-
-    .status-item.fail{
-      background:var(--bad-bg);
-      border-color:#fca5a5;
-    }
-
-    .status-item.unknown{
-      background:#f8fafc;
-      border-color:#cbd5e1;
     }
 
     .status-top{
@@ -462,66 +415,6 @@
       gap:12px;
       margin-bottom:8px;
       flex-wrap:wrap;
-    }
-
-    .readiness-card{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fff;
-      padding:18px;
-      margin-top:14px;
-      box-shadow:0 6px 20px rgba(15,23,42,.04);
-    }
-
-    .readiness-top{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:14px;
-      align-items:start;
-    }
-
-    .readiness-title{
-      font-size:20px;
-      font-weight:700;
-      margin:0 0 6px 0;
-    }
-
-    .readiness-score{
-      text-align:right;
-    }
-
-    .readiness-score .big{
-      font-size:32px;
-      font-weight:700;
-      margin:0;
-    }
-
-    .readiness-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:12px;
-      margin-top:14px;
-    }
-
-    .readiness-box{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-      background:var(--soft);
-    }
-
-    .readiness-box h4{
-      margin:0 0 8px 0;
-      font-size:14px;
-    }
-
-    .readiness-box ul{
-      margin:0 0 0 18px;
-      padding:0;
-    }
-
-    .readiness-box li{
-      margin:4px 0;
     }
 
     .drawer{
@@ -608,17 +501,11 @@
     }
 
     @media (max-width: 760px){
-      .grid, .readiness-grid{
+      .grid{
         grid-template-columns:1fr;
       }
       .summary-box{
         grid-template-columns:1fr;
-      }
-      .readiness-top{
-        grid-template-columns:1fr;
-      }
-      .readiness-score{
-        text-align:left;
       }
     }
 
@@ -637,16 +524,13 @@
         display:block !important;
         padding:0;
       }
-      .readiness-card{
-        box-shadow:none;
-      }
     }
   </style>
 </head>
 <body>
 <div class="app">
   <div class="hero">
-    <h1>ECC CSR Assistant &amp; Script Generator</h1>
+    <h1>ECC CSR Assistant & Script Generator</h1>
     <p>
       Guided CSR generation for Windows and Linux, built around ECC P-384 and SHA-256, with pre-submission checks for outdated server stacks and common failure patterns.
     </p>
@@ -681,7 +565,6 @@
         <button class="tab-btn active" onclick="showTab('tab-env', this)">Environment</button>
         <button class="tab-btn" onclick="showTab('tab-cert', this)">Certificate</button>
         <button class="tab-btn" onclick="showTab('tab-output', this)">Output</button>
-        <button class="tab-btn" onclick="showTab('tab-validate', this)">Post-Deployment Validation</button>
         <button class="tab-btn" onclick="showTab('tab-kb', this)">Knowledge Bank</button>
       </div>
 
@@ -807,7 +690,7 @@
         </div>
 
         <div class="actions" style="margin-top:18px;">
-          <button class="primary" onclick="generateAll()">Generate scripts &amp; checks</button>
+          <button class="primary" onclick="generateAll()">Generate scripts & checks</button>
           <button class="secondary" onclick="showTab('tab-output')">Go to output</button>
         </div>
       </div>
@@ -819,7 +702,6 @@
             <button class="primary" onclick="generateAll()">Regenerate</button>
             <button class="secondary" onclick="copyActiveOutput()">Copy active tab</button>
             <button class="secondary" onclick="downloadFiles()">Download scripts</button>
-            <button class="light" onclick="window.print()">Print</button>
             <button class="light" onclick="resetAll()">Reset</button>
           </div>
         </div>
@@ -827,43 +709,6 @@
         <div class="panel info">
           <strong>Important</strong>
           This page gives script output and guidance only. Run the script on the target server or on an approved admin workstation. Do not move CSR content through email, PDF, chat, or screenshots.
-        </div>
-
-        <div id="readinessSummary" class="readiness-card" style="display:none;"></div>
-
-        <div id="operatorChecklist" class="readiness-card" style="display:none;">
-          <div class="readiness-top">
-            <div>
-              <div class="readiness-title">Operator Checklist</div>
-              <div class="hint">A quick run sheet for the team handling CSR generation, submission, issuance, and certificate deployment.</div>
-            </div>
-            <div class="readiness-score">
-              <div class="big">OPS</div>
-              <div class="hint">execution view</div>
-            </div>
-          </div>
-
-          <div class="readiness-grid">
-            <div class="readiness-box">
-              <h4>Before you submit</h4>
-              <ul id="checkBeforeSubmit"></ul>
-            </div>
-
-            <div class="readiness-box">
-              <h4>After issuance</h4>
-              <ul id="checkAfterIssuance"></ul>
-            </div>
-
-            <div class="readiness-box">
-              <h4>Before binding / deployment</h4>
-              <ul id="checkBeforeBinding"></ul>
-            </div>
-
-            <div class="readiness-box">
-              <h4>Evidence to retain</h4>
-              <ul id="checkEvidence"></ul>
-            </div>
-          </div>
         </div>
 
         <div class="subtabs" id="outputTabs">
@@ -894,49 +739,6 @@
         </div>
 
         <div id="resultArea"></div>
-      </div>
-
-      <div id="tab-validate" class="tab-panel">
-        <h2 class="section-title">Post-Deployment Validation</h2>
-        <div class="panel info">
-          <strong>Purpose</strong>
-          Use this section after the certificate has been installed and bound, to verify that the service is actually presenting the correct certificate and chain.
-        </div>
-
-        <div id="postDeployChecklist" class="readiness-card" style="display:none;">
-          <div class="readiness-top">
-            <div>
-              <div class="readiness-title">Post-Deployment Validation Checklist</div>
-              <div class="hint">Use this to confirm the new certificate is served correctly after deployment.</div>
-            </div>
-            <div class="readiness-score">
-              <div class="big">TLS</div>
-              <div class="hint">live check</div>
-            </div>
-          </div>
-
-          <div class="readiness-grid">
-            <div class="readiness-box">
-              <h4>Immediate validation</h4>
-              <ul id="checkImmediateValidation"></ul>
-            </div>
-
-            <div class="readiness-box">
-              <h4>Certificate and chain</h4>
-              <ul id="checkCertChain"></ul>
-            </div>
-
-            <div class="readiness-box">
-              <h4>Service-specific checks</h4>
-              <ul id="checkServiceSpecific"></ul>
-            </div>
-
-            <div class="readiness-box">
-              <h4>Close-out actions</h4>
-              <ul id="checkCloseOut"></ul>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div id="tab-kb" class="tab-panel">
@@ -1101,7 +903,6 @@
 
   let lastDownloads = [];
   let lastAssessment = null;
-  let lastFormData = null;
 
   function byId(id){ return document.getElementById(id); }
 
@@ -1308,6 +1109,7 @@
   function buildLinuxScript(data){
     const keyFile = `${data.fileBase}.key`;
     const csrFile = `${data.fileBase}.csr`;
+    const sanExpr = data.sans.map(x => `DNS:${x}`).join(",");
 
     let installHint = "";
     if (data.server === "Nginx") {
@@ -1336,7 +1138,7 @@ openssl ecparam -name secp384r1 -genkey -noout -out "$KEY_FILE"
 
 openssl req -new -sha256 -key "$KEY_FILE" -out "$CSR_FILE" \\
 -subj "/C=${data.country}/ST=${data.state}/L=${data.city}/O=${data.org}/OU=${data.ou}/CN=${data.cn}${data.email ? `/emailAddress=${data.email}` : ""}" \\
--addext "subjectAltName = ${data.sans.map(x => `DNS:${x}`).join(",")}"
+-addext "subjectAltName = ${sanExpr}"
 
 openssl req -in "$CSR_FILE" -noout -text
 
@@ -1435,18 +1237,25 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       table.push({ item, detected, rule, status, explanation });
       if (status === "Warning") score -= 10;
       if (status === "Fail") score -= 25;
-      if (status !== "OK" && explanation) issues.push({ status, text: explanation });
+      if (status !== "OK") {
+        issues.push({ status, text: explanation });
+      }
     }
 
-    if (data.sans.length === 0) add("SAN", "None", "At least one DNS name", "Fail", "SAN is missing. Add at least one DNS name to reduce hostname validation issues.");
-    else add("SAN", data.sans.join(", "), "At least one DNS name", "OK", "");
+    if (data.sans.length === 0) {
+      add("SAN", "None", "At least one DNS name", "Fail", "SAN is missing. Add at least one DNS name to reduce hostname validation issues.");
+    } else {
+      add("SAN", data.sans.join(", "), "At least one DNS name", "OK", "");
+    }
 
     if (data.opensslVersion) {
       const c = compareVersions(data.opensslVersion, KB.baselines.opensslMin);
       if (c === null) add("OpenSSL", data.opensslVersion, `>= ${KB.baselines.opensslMin}`, "Warning", "OpenSSL version could not be parsed clearly.");
       else if (c < 0) add("OpenSSL", data.opensslVersion, `>= ${KB.baselines.opensslMin}`, "Fail", `OpenSSL appears below ${KB.baselines.opensslMin}.`);
       else add("OpenSSL", data.opensslVersion, `>= ${KB.baselines.opensslMin}`, "OK", "");
-    } else add("OpenSSL", "Not provided", `>= ${KB.baselines.opensslMin}`, "Warning", "OpenSSL version not provided.");
+    } else {
+      add("OpenSSL", "Not provided", `>= ${KB.baselines.opensslMin}`, "Warning", "OpenSSL version not provided.");
+    }
 
     if (data.opensshVersion) {
       const c = compareVersions(data.opensshVersion, KB.baselines.opensshMin);
@@ -1454,7 +1263,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       else if (c < 0) add("OpenSSH", data.opensshVersion, `>= ${KB.baselines.opensshMin}`, "Fail", `OpenSSH appears below ${KB.baselines.opensshMin}.`);
       else add("OpenSSH", data.opensshVersion, `>= ${KB.baselines.opensshMin}`, "OK", "");
     } else {
-      add("OpenSSH", "Not provided", `>= ${KB.baselines.opensshMin}`, "Unknown", "");
+      add("OpenSSH", "Not provided", `>= ${KB.baselines.opensshMin}`, "Unknown", "OpenSSH version was not provided.");
       score -= 3;
     }
 
@@ -1470,7 +1279,9 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
           if (c === null) add("IIS", data.iisVersion, `>= ${KB.baselines.iisMinMajor}`, "Warning", "IIS version could not be parsed clearly.");
           else if (c < 0) add("IIS", data.iisVersion, `>= ${KB.baselines.iisMinMajor}`, "Fail", `IIS appears below ${KB.baselines.iisMinMajor}. Older IIS can make ECC request handling or deployment harder.`);
           else add("IIS", data.iisVersion, `>= ${KB.baselines.iisMinMajor}`, "OK", "");
-        } else add("IIS", "Not provided", `>= ${KB.baselines.iisMinMajor}`, "Warning", "IIS version not provided.");
+        } else {
+          add("IIS", "Not provided", `>= ${KB.baselines.iisMinMajor}`, "Warning", "IIS version not provided.");
+        }
       }
     }
 
@@ -1487,7 +1298,9 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
         if (c === null) add("Apache", data.apacheVersion, `>= ${KB.baselines.apacheMin}`, "Warning", "Apache version could not be parsed clearly.");
         else if (c < 0) add("Apache", data.apacheVersion, `>= ${KB.baselines.apacheMin}`, "Fail", `Apache appears below ${KB.baselines.apacheMin}.`);
         else add("Apache", data.apacheVersion, `>= ${KB.baselines.apacheMin}`, "OK", "");
-      } else add("Apache", "Not provided", `>= ${KB.baselines.apacheMin}`, "Warning", "Apache version not provided.");
+      } else {
+        add("Apache", "Not provided", `>= ${KB.baselines.apacheMin}`, "Warning", "Apache version not provided.");
+      }
     }
 
     if (data.server === "XAMPP") {
@@ -1496,14 +1309,18 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
         if (c === null) add("XAMPP", data.xamppVersion, `>= ${KB.baselines.xamppMin}`, "Warning", "XAMPP version could not be parsed clearly.");
         else if (c < 0) add("XAMPP", data.xamppVersion, `>= ${KB.baselines.xamppMin}`, "Fail", `XAMPP appears below ${KB.baselines.xamppMin}.`);
         else add("XAMPP", data.xamppVersion, `>= ${KB.baselines.xamppMin}`, "OK", "");
-      } else add("XAMPP", "Not provided", `>= ${KB.baselines.xamppMin}`, "Warning", "XAMPP version not provided.");
+      } else {
+        add("XAMPP", "Not provided", `>= ${KB.baselines.xamppMin}`, "Warning", "XAMPP version not provided.");
+      }
 
       if (data.phpVersion) {
         const c = compareVersions(data.phpVersion, KB.baselines.phpMin);
         if (c === null) add("PHP", data.phpVersion, `>= ${KB.baselines.phpMin}`, "Warning", "PHP version could not be parsed clearly.");
         else if (c < 0) add("PHP", data.phpVersion, `>= ${KB.baselines.phpMin}`, "Fail", `PHP appears below ${KB.baselines.phpMin}.`);
         else add("PHP", data.phpVersion, `>= ${KB.baselines.phpMin}`, "OK", "");
-      } else add("PHP", "Not provided", `>= ${KB.baselines.phpMin}`, "Warning", "PHP version not provided.");
+      } else {
+        add("PHP", "Not provided", `>= ${KB.baselines.phpMin}`, "Warning", "PHP version not provided.");
+      }
     }
 
     add("CSR handling", "Planned workflow", "Original file only", "Warning", "Do not copy CSR text through UI, email, PDF, or chat applications.");
@@ -1522,6 +1339,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
 
   function buildDownloads(data){
     const files = [];
+
     const linux = buildLinuxScript(data);
     const ps = buildWindowsPowerShell(data);
     const gui = buildWindowsGUIGuidance(data);
@@ -1532,8 +1350,11 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     } else {
       files.push({ filename: `${data.fileBase}-windows-certreq.ps1`, content: ps });
       files.push({ filename: `${data.fileBase}-request.inf`, content: inf });
-      if (data.server === "IIS") files.push({ filename: `${data.fileBase}-windows-gui.txt`, content: gui });
+      if (data.server === "IIS") {
+        files.push({ filename: `${data.fileBase}-windows-gui.txt`, content: gui });
+      }
     }
+
     return files;
   }
 
@@ -1542,182 +1363,6 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     if (status === "Warning") return `<span class="badge warn">Warning</span>`;
     if (status === "Fail") return `<span class="badge bad">Fail</span>`;
     return `<span class="badge unk">Unknown</span>`;
-  }
-
-  function recommendedPath(data){
-    if (data.platform === "Linux") return "Use the Linux OpenSSL tab and run it on the target server or approved admin workstation.";
-    if (data.server === "IIS") {
-      if (data.iisMethod === "gui") return "Use the Windows IIS GUI tab.";
-      if (data.iisMethod === "powershell") return "Use the Windows PowerShell tab.";
-      return "Use Windows PowerShell for scripted generation, then cross-check with the IIS GUI tab.";
-    }
-    return "Use the Windows PowerShell tab.";
-  }
-
-  function renderReadinessSummary(data, result){
-    const box = byId("readinessSummary");
-    box.style.display = "";
-
-    let overall = "Ready with standard caution";
-    let nextAction = "Proceed with CSR generation on the target host and submit the original request file.";
-    let panelClass = "ok";
-
-    if (result.failCount > 0) {
-      overall = "Not ready for submission";
-      nextAction = "Address the failed baseline items first, then regenerate the request.";
-      panelClass = "bad";
-    } else if (result.warnCount > 0) {
-      overall = "Conditionally ready";
-      nextAction = "Proceed only after reviewing the warning items and confirming the target stack supports ECC.";
-      panelClass = "warn";
-    }
-
-    const topConcerns = result.issues.slice(0, 4).map(x => `<li>${x.text}</li>`).join("") || "<li>No major concern recorded.</li>";
-    const snapshot = [
-      `${data.platform} / ${data.osName} ${data.osVersion || "(version not provided)"}`,
-      `${data.server}${data.iisVersion ? ` ${data.iisVersion}` : ""}`,
-      `${data.opensslVersion ? `OpenSSL ${data.opensslVersion}` : "OpenSSL not provided"}`,
-      `${data.cn ? `CN ${data.cn}` : ""}`
-    ].filter(Boolean).map(x => `<li>${x}</li>`).join("");
-
-    box.innerHTML = `
-      <div class="readiness-top">
-        <div>
-          <div class="readiness-title">Readiness Summary</div>
-          <div class="panel ${panelClass}" style="margin-top:0;">
-            <strong>${overall}</strong>
-            Health score: ${result.score}/100
-          </div>
-        </div>
-        <div class="readiness-score">
-          <div class="big">${result.score}</div>
-          <div class="hint">overall score</div>
-        </div>
-      </div>
-
-      <div class="readiness-grid">
-        <div class="readiness-box">
-          <h4>Environment snapshot</h4>
-          <ul>${snapshot}</ul>
-        </div>
-
-        <div class="readiness-box">
-          <h4>Immediate next action</h4>
-          <div>${nextAction}</div>
-        </div>
-
-        <div class="readiness-box">
-          <h4>Primary concerns</h4>
-          <ul>${topConcerns}</ul>
-        </div>
-
-        <div class="readiness-box">
-          <h4>Recommended output path</h4>
-          <div>${recommendedPath(data)}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderOperatorChecklist(data){
-    byId("operatorChecklist").style.display = "";
-
-    const beforeSubmit = [
-      `Confirm target profile is ECC P-384 with SHA-256.`,
-      `Generate the request on the target server or approved admin workstation.`,
-      `Keep the private key under agency control. Do not export or share it unless there is an approved process.`,
-      `Use the original request file for submission. Do not copy CSR text through UI, email, PDF, or chat.`,
-      `Confirm CN is correct: ${data.cn}.`,
-      `Confirm SAN list is complete: ${data.sans.join(", ")}.`,
-      `Verify the server stack entered in the form matches the actual target environment.`,
-      `Review all warning and failed checks before proceeding.`
-    ];
-
-    const afterIssuance = [
-      `Match the issued certificate against CN and SAN values requested.`,
-      `Confirm the certificate algorithm and chain are what the service expects.`,
-      `For Windows, accept or import the issued certificate using the correct certificate store workflow.`,
-      `For Linux, store certificate files in the approved path with suitable file permissions.`,
-      `Retain the issued certificate, chain, and request artifacts in the service record.`
-    ];
-
-    const beforeBinding = [
-      data.platform === "Windows"
-        ? `Confirm IIS version and Windows Server version are suitable for ECC deployment.`
-        : `Confirm OpenSSL and web server versions are suitable for ECC deployment.`,
-      data.server === "IIS"
-        ? `Confirm the certificate is visible in the Windows certificate store before binding in IIS.`
-        : `Confirm certificate and private key file paths are correct in the service configuration.`,
-      data.server === "Nginx"
-        ? `Validate Nginx configuration and reload safely after updating ssl_certificate and ssl_certificate_key.`
-        : `Review service configuration one final time before restart or reload.`,
-      data.server === "Apache"
-        ? `Validate Apache SSL vhost configuration before reload.`
-        : `Test the service after binding and verify HTTPS comes up with the correct certificate.`,
-      `Confirm downstream applications, proxies, or clients support ECC certificates.`
-    ];
-
-    const evidence = [
-      `Date and time of CSR generation.`,
-      `Operator name or team handling the request.`,
-      `Target hostname(s): ${data.sans.join(", ")}.`,
-      `Server stack recorded in this form.`,
-      `Issued certificate file name and chain file name.`,
-      `Change record or ticket reference.`,
-      `Verification note confirming successful binding and HTTPS validation.`
-    ];
-
-    byId("checkBeforeSubmit").innerHTML = beforeSubmit.map(x => `<li>${x}</li>`).join("");
-    byId("checkAfterIssuance").innerHTML = afterIssuance.map(x => `<li>${x}</li>`).join("");
-    byId("checkBeforeBinding").innerHTML = beforeBinding.map(x => `<li>${x}</li>`).join("");
-    byId("checkEvidence").innerHTML = evidence.map(x => `<li>${x}</li>`).join("");
-  }
-
-  function renderPostDeploymentChecklist(data){
-    byId("postDeployChecklist").style.display = "";
-
-    const immediate = [
-      `Open the site in a browser and verify HTTPS loads without certificate warning.`,
-      `Confirm the browser shows the new certificate and not the previous one.`,
-      `Verify the certificate subject and SAN include: ${data.sans.join(", ")}.`,
-      `Confirm the certificate validity dates match the newly issued certificate.`
-    ];
-
-    const certChain = [
-      `Check that the full certificate chain is presented correctly.`,
-      `Confirm the issuing CA and intermediate chain are the expected ones.`,
-      `Verify the certificate algorithm is ECC / ECDSA and the service is not presenting a different fallback certificate.`,
-      `Use command-line or browser inspection to confirm the live chain is complete.`
-    ];
-
-    const serviceSpecific = [];
-    if (data.server === "IIS") {
-      serviceSpecific.push(`Confirm the correct certificate binding is attached to the intended IIS site and port.`);
-      serviceSpecific.push(`Review IIS HTTPS bindings and ensure no old binding remains active on the same endpoint.`);
-    } else if (data.server === "Nginx") {
-      serviceSpecific.push(`Run a configuration test before reload if not already done.`);
-      serviceSpecific.push(`Confirm nginx is using the intended certificate and private key paths.`);
-    } else if (data.server === "Apache") {
-      serviceSpecific.push(`Validate Apache SSL virtual host configuration.`);
-      serviceSpecific.push(`Confirm the active vhost is serving the intended certificate file and key file.`);
-    } else {
-      serviceSpecific.push(`Confirm the service configuration now points to the new certificate material.`);
-      serviceSpecific.push(`Verify the running service has been reloaded or restarted cleanly.`);
-    }
-    serviceSpecific.push(`Confirm clients and upstream/downstream systems can still connect successfully after the change.`);
-
-    const closeOut = [
-      `Record the deployment date and time.`,
-      `Record the certificate serial number or identifying reference.`,
-      `Capture validation evidence such as screenshot, browser certificate view, or command output.`,
-      `Close the ticket or update the change record only after successful validation.`,
-      `Retain rollback notes if the old certificate must remain available for contingency handling.`
-    ];
-
-    byId("checkImmediateValidation").innerHTML = immediate.map(x => `<li>${x}</li>`).join("");
-    byId("checkCertChain").innerHTML = certChain.map(x => `<li>${x}</li>`).join("");
-    byId("checkServiceSpecific").innerHTML = serviceSpecific.map(x => `<li>${x}</li>`).join("");
-    byId("checkCloseOut").innerHTML = closeOut.map(x => `<li>${x}</li>`).join("");
   }
 
   function renderAssessment(result){
@@ -1736,24 +1381,17 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       ? `<ul>${result.issues.map(x => `<li>${x.text}</li>`).join("")}</ul>`
       : `<div>No warning currently triggered.</div>`;
 
-    const statusGrid = result.table.map(r => {
-      let cardClass = "unknown";
-      if (r.status === "OK") cardClass = "pass";
-      else if (r.status === "Warning") cardClass = "warn";
-      else if (r.status === "Fail") cardClass = "fail";
-
-      return `
-        <div class="status-item ${cardClass}">
-          <div class="status-top">
-            <strong>${r.item}</strong>
-            ${statusBadge(r.status)}
-          </div>
-          <div><strong>Detected:</strong> ${r.detected}</div>
-          <div class="status-rule"><strong>Rule:</strong> ${r.rule}</div>
-          ${r.explanation ? `<div class="hint" style="margin-top:6px;">${r.explanation}</div>` : ""}
+    const statusGrid = result.table.map(r => `
+      <div class="status-item">
+        <div class="status-top">
+          <strong>${r.item}</strong>
+          ${statusBadge(r.status)}
         </div>
-      `;
-    }).join("");
+        <div><strong>Detected:</strong> ${r.detected}</div>
+        <div class="status-rule"><strong>Rule:</strong> ${r.rule}</div>
+        ${r.explanation ? `<div class="hint" style="margin-top:6px;">${r.explanation}</div>` : ""}
+      </div>
+    `).join("");
 
     byId("resultArea").innerHTML = `
       <div class="panel ${panelClass}">
@@ -1762,15 +1400,15 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       </div>
 
       <div class="summary-box">
-        <div class="mini pass">
+        <div class="mini">
           <div class="n">${result.okCount}</div>
           <div class="t">Checks passed</div>
         </div>
-        <div class="mini warn">
+        <div class="mini">
           <div class="n">${result.warnCount}</div>
           <div class="t">Warnings</div>
         </div>
-        <div class="mini fail">
+        <div class="mini">
           <div class="n">${result.failCount}</div>
           <div class="t">Failures</div>
         </div>
@@ -1810,16 +1448,15 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       return;
     }
 
-    lastFormData = data;
+    const linux = buildLinuxScript(data);
+    const ps = buildWindowsPowerShell(data);
+    const gui = buildWindowsGUIGuidance(data);
 
-    byId("outputLinux").value = buildLinuxScript(data);
-    byId("outputPS").value = buildWindowsPowerShell(data);
-    byId("outputGUI").value = buildWindowsGUIGuidance(data);
+    byId("outputLinux").value = linux;
+    byId("outputPS").value = ps;
+    byId("outputGUI").value = gui;
 
     const result = assess(data);
-    renderReadinessSummary(data, result);
-    renderOperatorChecklist(data);
-    renderPostDeploymentChecklist(data);
     renderAssessment(result);
 
     lastDownloads = buildDownloads(data);
@@ -1884,21 +1521,8 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     byId("outputPS").value = "";
     byId("outputGUI").value = "";
     byId("resultArea").innerHTML = "";
-    byId("readinessSummary").style.display = "none";
-    byId("readinessSummary").innerHTML = "";
-    byId("operatorChecklist").style.display = "none";
-    byId("postDeployChecklist").style.display = "none";
-    byId("checkBeforeSubmit").innerHTML = "";
-    byId("checkAfterIssuance").innerHTML = "";
-    byId("checkBeforeBinding").innerHTML = "";
-    byId("checkEvidence").innerHTML = "";
-    byId("checkImmediateValidation").innerHTML = "";
-    byId("checkCertChain").innerHTML = "";
-    byId("checkServiceSpecific").innerHTML = "";
-    byId("checkCloseOut").innerHTML = "";
     lastDownloads = [];
     lastAssessment = null;
-    lastFormData = null;
     byId("scoreNumber").textContent = "--";
     byId("scoreSub").textContent = "Generate a result to assess the environment.";
     byId("scoreBar").style.width = "0%";
