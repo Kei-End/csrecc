@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ECC CSR Assistant &amp; Script Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"></script>
   <style>
     :root{
       --bg:#f4f7fb;
@@ -37,7 +38,7 @@
     }
 
     .app{
-      max-width:1320px;
+      max-width:1380px;
       margin:0 auto;
       padding:24px;
     }
@@ -60,7 +61,7 @@
       margin:0;
       font-size:14px;
       opacity:.95;
-      max-width:920px;
+      max-width:980px;
     }
 
     .hero-grid{
@@ -227,6 +228,10 @@
       font-size:14px;
     }
 
+    input[type="file"]{
+      padding:10px;
+    }
+
     input:focus, select:focus, textarea:focus{
       outline:none;
       border-color:var(--primary);
@@ -234,7 +239,7 @@
     }
 
     textarea{
-      min-height:320px;
+      min-height:220px;
       resize:vertical;
       white-space:pre-wrap;
       font-family: Consolas, "Courier New", monospace;
@@ -571,6 +576,37 @@
       display:block;
     }
 
+    .collapsible{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      overflow:hidden;
+    }
+
+    .collapsible-head{
+      width:100%;
+      border:none;
+      background:#fff;
+      padding:14px 16px;
+      text-align:left;
+      font-weight:700;
+      font-size:15px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+    }
+
+    .collapsible-body{
+      display:none;
+      padding:0 16px 16px 16px;
+    }
+
+    .collapsible.open .collapsible-body{
+      display:block;
+    }
+
     .reference{
       margin-top:14px;
       font-size:12px;
@@ -595,6 +631,52 @@
       background:var(--soft);
     }
 
+    .decoder-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .compare-list{
+      margin:0;
+      padding-left:18px;
+    }
+
+    .compare-list li{
+      margin:5px 0;
+    }
+
+    .drop-zone{
+      border:2px dashed #94a3b8;
+      border-radius:14px;
+      background:#f8fafc;
+      padding:18px;
+      text-align:center;
+      transition:.2s ease;
+      cursor:pointer;
+    }
+
+    .drop-zone:hover{
+      border-color:var(--primary);
+      background:#f0fdfa;
+    }
+
+    .drop-zone.dragover{
+      border-color:var(--primary);
+      background:#ecfdf5;
+      box-shadow:0 0 0 3px rgba(15,118,110,.12);
+    }
+
+    .drop-zone strong{
+      display:block;
+      margin-bottom:6px;
+    }
+
+    .drop-zone .small{
+      font-size:12px;
+      color:var(--muted);
+    }
+
     @media (max-width: 1080px){
       .layout{
         grid-template-columns:1fr;
@@ -604,6 +686,9 @@
       }
       .drawer{
         position:static;
+      }
+      .decoder-grid{
+        grid-template-columns:1fr;
       }
     }
 
@@ -681,6 +766,7 @@
         <button class="tab-btn active" onclick="showTab('tab-env', this)">Environment</button>
         <button class="tab-btn" onclick="showTab('tab-cert', this)">Certificate</button>
         <button class="tab-btn" onclick="showTab('tab-output', this)">Output</button>
+        <button class="tab-btn" onclick="showTab('tab-decoder', this)">Decoder</button>
         <button class="tab-btn" onclick="showTab('tab-validate', this)">Post-Deployment Validation</button>
         <button class="tab-btn" onclick="showTab('tab-kb', this)">Knowledge Bank</button>
       </div>
@@ -829,39 +915,53 @@
           This page gives script output and guidance only. Run the script on the target server or on an approved admin workstation. Do not move CSR content through email, PDF, chat, or screenshots.
         </div>
 
-        <div id="readinessSummary" class="readiness-card" style="display:none;"></div>
-
-        <div id="operatorChecklist" class="readiness-card" style="display:none;">
-          <div class="readiness-top">
-            <div>
-              <div class="readiness-title">Operator Checklist</div>
-              <div class="hint">A quick run sheet for the team handling CSR generation, submission, issuance, and certificate deployment.</div>
-            </div>
-            <div class="readiness-score">
-              <div class="big">OPS</div>
-              <div class="hint">execution view</div>
-            </div>
+        <div class="collapsible open" id="colReadiness">
+          <button class="collapsible-head" onclick="toggleCollapse(this)">
+            <span>Readiness Summary</span><span>−</span>
+          </button>
+          <div class="collapsible-body">
+            <div id="readinessSummary" class="readiness-card" style="display:none;"></div>
           </div>
+        </div>
 
-          <div class="readiness-grid">
-            <div class="readiness-box">
-              <h4>Before you submit</h4>
-              <ul id="checkBeforeSubmit"></ul>
-            </div>
+        <div class="collapsible" id="colOps">
+          <button class="collapsible-head" onclick="toggleCollapse(this)">
+            <span>Operator Checklist</span><span>+</span>
+          </button>
+          <div class="collapsible-body">
+            <div id="operatorChecklist" class="readiness-card" style="display:none;">
+              <div class="readiness-top">
+                <div>
+                  <div class="readiness-title">Operator Checklist</div>
+                  <div class="hint">A quick run sheet for the team handling CSR generation, submission, issuance, and certificate deployment.</div>
+                </div>
+                <div class="readiness-score">
+                  <div class="big">OPS</div>
+                  <div class="hint">execution view</div>
+                </div>
+              </div>
 
-            <div class="readiness-box">
-              <h4>After issuance</h4>
-              <ul id="checkAfterIssuance"></ul>
-            </div>
+              <div class="readiness-grid">
+                <div class="readiness-box">
+                  <h4>Before you submit</h4>
+                  <ul id="checkBeforeSubmit"></ul>
+                </div>
 
-            <div class="readiness-box">
-              <h4>Before binding / deployment</h4>
-              <ul id="checkBeforeBinding"></ul>
-            </div>
+                <div class="readiness-box">
+                  <h4>After issuance</h4>
+                  <ul id="checkAfterIssuance"></ul>
+                </div>
 
-            <div class="readiness-box">
-              <h4>Evidence to retain</h4>
-              <ul id="checkEvidence"></ul>
+                <div class="readiness-box">
+                  <h4>Before binding / deployment</h4>
+                  <ul id="checkBeforeBinding"></ul>
+                </div>
+
+                <div class="readiness-box">
+                  <h4>Evidence to retain</h4>
+                  <ul id="checkEvidence"></ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -893,7 +993,77 @@
           </div>
         </div>
 
-        <div id="resultArea"></div>
+        <div class="collapsible" id="colDetails">
+          <button class="collapsible-head" onclick="toggleCollapse(this)">
+            <span>Check Details</span><span>+</span>
+          </button>
+          <div class="collapsible-body">
+            <div id="resultArea"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-decoder" class="tab-panel">
+        <h2 class="section-title">CSR &amp; Certificate Decoder</h2>
+        <div class="panel info">
+          <strong>Use case</strong>
+          Paste your CSR or certificate after generation or issuance, or upload the file directly. This section will decode the object and compare the decoded values against the details entered in the Certificate tab.
+        </div>
+
+        <div class="decoder-grid">
+          <div>
+            <div class="field">
+              <label for="csrFile">Upload CSR file</label>
+              <input id="csrFile" type="file" accept=".csr,.pem,.txt" onchange="handleFileUpload(this, 'csrPem')" hidden>
+              <div class="drop-zone" id="csrDropZone" onclick="byId('csrFile').click()">
+                <strong>Drop CSR file here</strong>
+                <div class="small">or click to choose a file (.csr, .pem, .txt)</div>
+              </div>
+            </div>
+            <div class="field" style="margin-top:12px;">
+              <label for="csrPem">Paste CSR PEM</label>
+              <textarea id="csrPem" placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;...&#10;-----END CERTIFICATE REQUEST-----"></textarea>
+            </div>
+          </div>
+
+          <div>
+            <div class="field">
+              <label for="certFile">Upload certificate file</label>
+              <input id="certFile" type="file" accept=".crt,.cer,.pem,.txt" onchange="handleFileUpload(this, 'certPem')" hidden>
+              <div class="drop-zone" id="certDropZone" onclick="byId('certFile').click()">
+                <strong>Drop certificate file here</strong>
+                <div class="small">or click to choose a file (.crt, .cer, .pem, .txt)</div>
+              </div>
+            </div>
+            <div class="field" style="margin-top:12px;">
+              <label for="certPem">Paste Certificate PEM</label>
+              <textarea id="certPem" placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:16px;">
+          <button class="primary" onclick="decodeArtifacts()">Decode &amp; Compare</button>
+          <button class="secondary" onclick="clearDecoder()">Clear Decoder</button>
+        </div>
+
+        <div class="collapsible open" id="colDecoderCSR">
+          <button class="collapsible-head" onclick="toggleCollapse(this)">
+            <span>CSR Decoder Result</span><span>−</span>
+          </button>
+          <div class="collapsible-body">
+            <div id="csrDecodeResult"></div>
+          </div>
+        </div>
+
+        <div class="collapsible" id="colDecoderCert">
+          <button class="collapsible-head" onclick="toggleCollapse(this)">
+            <span>Certificate Decoder Result</span><span>+</span>
+          </button>
+          <div class="collapsible-body">
+            <div id="certDecodeResult"></div>
+          </div>
+        </div>
       </div>
 
       <div id="tab-validate" class="tab-panel">
@@ -903,37 +1073,44 @@
           Use this section after the certificate has been installed and bound, to verify that the service is actually presenting the correct certificate and chain.
         </div>
 
-        <div id="postDeployChecklist" class="readiness-card" style="display:none;">
-          <div class="readiness-top">
-            <div>
-              <div class="readiness-title">Post-Deployment Validation Checklist</div>
-              <div class="hint">Use this to confirm the new certificate is served correctly after deployment.</div>
-            </div>
-            <div class="readiness-score">
-              <div class="big">TLS</div>
-              <div class="hint">live check</div>
-            </div>
-          </div>
+        <div class="collapsible open" id="colPostDeploy">
+          <button class="collapsible-head" onclick="toggleCollapse(this)">
+            <span>Post-Deployment Validation Checklist</span><span>−</span>
+          </button>
+          <div class="collapsible-body">
+            <div id="postDeployChecklist" class="readiness-card" style="display:none;">
+              <div class="readiness-top">
+                <div>
+                  <div class="readiness-title">Post-Deployment Validation Checklist</div>
+                  <div class="hint">Use this to confirm the new certificate is served correctly after deployment.</div>
+                </div>
+                <div class="readiness-score">
+                  <div class="big">TLS</div>
+                  <div class="hint">live check</div>
+                </div>
+              </div>
 
-          <div class="readiness-grid">
-            <div class="readiness-box">
-              <h4>Immediate validation</h4>
-              <ul id="checkImmediateValidation"></ul>
-            </div>
+              <div class="readiness-grid">
+                <div class="readiness-box">
+                  <h4>Immediate validation</h4>
+                  <ul id="checkImmediateValidation"></ul>
+                </div>
 
-            <div class="readiness-box">
-              <h4>Certificate and chain</h4>
-              <ul id="checkCertChain"></ul>
-            </div>
+                <div class="readiness-box">
+                  <h4>Certificate and chain</h4>
+                  <ul id="checkCertChain"></ul>
+                </div>
 
-            <div class="readiness-box">
-              <h4>Service-specific checks</h4>
-              <ul id="checkServiceSpecific"></ul>
-            </div>
+                <div class="readiness-box">
+                  <h4>Service-specific checks</h4>
+                  <ul id="checkServiceSpecific"></ul>
+                </div>
 
-            <div class="readiness-box">
-              <h4>Close-out actions</h4>
-              <ul id="checkCloseOut"></ul>
+                <div class="readiness-box">
+                  <h4>Close-out actions</h4>
+                  <ul id="checkCloseOut"></ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1131,6 +1308,12 @@
     const item = btn.closest(".acc-item");
     item.classList.toggle("open");
     btn.querySelector("span").textContent = item.classList.contains("open") ? "−" : "+";
+  }
+
+  function toggleCollapse(btn){
+    const item = btn.closest(".collapsible");
+    item.classList.toggle("open");
+    btn.querySelector("span:last-child").textContent = item.classList.contains("open") ? "−" : "+";
   }
 
   function fillSelect(selectEl, options){
@@ -1696,7 +1879,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       serviceSpecific.push(`Review IIS HTTPS bindings and ensure no old binding remains active on the same endpoint.`);
     } else if (data.server === "Nginx") {
       serviceSpecific.push(`Run a configuration test before reload if not already done.`);
-      serviceSpecific.push(`Confirm nginx is using the intended certificate and private key paths.`);
+      serviceSpecific.push(`Confirm Nginx is using the intended certificate and private key paths.`);
     } else if (data.server === "Apache") {
       serviceSpecific.push(`Validate Apache SSL virtual host configuration.`);
       serviceSpecific.push(`Confirm the active vhost is serving the intended certificate file and key file.`);
@@ -1779,8 +1962,6 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       <div class="section-title" style="margin-top:16px;">Check details</div>
       <div class="status-grid">${statusGrid}</div>
     `;
-
-    updateScore(result);
   }
 
   function updateScore(result){
@@ -1821,11 +2002,343 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     renderOperatorChecklist(data);
     renderPostDeploymentChecklist(data);
     renderAssessment(result);
+    updateScore(result);
 
     lastDownloads = buildDownloads(data);
-
     syncOutputTabs();
     showTab("tab-output");
+  }
+
+  function getExpectedDetails(){
+    const data = readForm();
+    return {
+      CN: data.cn,
+      O: data.org,
+      OU: data.ou,
+      L: data.city,
+      ST: data.state,
+      C: data.country,
+      SAN: data.sans
+    };
+  }
+
+  function attrsToMap(attrs){
+    const map = {};
+    attrs.forEach(a => {
+      const key = a.shortName || a.name || a.type;
+      map[key] = a.value;
+    });
+    return map;
+  }
+
+  function getExtensionByName(exts, name){
+    if (!exts) return null;
+    return exts.find(e => e.name === name);
+  }
+
+  function parseCSR(pem){
+    const csr = forge.pki.certificationRequestFromPem(pem);
+    const subject = attrsToMap(csr.subject.attributes || []);
+    const publicKey = csr.publicKey;
+    let keyInfo = "Unknown";
+    if (publicKey && publicKey.n && publicKey.e) keyInfo = "RSA";
+    else if (publicKey && publicKey.Q) keyInfo = "EC / ECDSA";
+
+    let sanList = [];
+    const extReq = (csr.getAttribute && csr.getAttribute({ name: "extensionRequest" })) || null;
+    if (extReq && extReq.extensions) {
+      const sanExt = getExtensionByName(extReq.extensions, "subjectAltName");
+      if (sanExt && sanExt.altNames) {
+        sanList = sanExt.altNames.filter(a => a.type === 2).map(a => a.value);
+      }
+    }
+
+    return {
+      type: "CSR",
+      subject,
+      sanList,
+      publicKeyType: keyInfo,
+      sigOid: csr.signatureOid || "",
+      pem
+    };
+  }
+
+  function parseCert(pem){
+    const cert = forge.pki.certificateFromPem(pem);
+    const subject = attrsToMap(cert.subject.attributes || []);
+    const issuer = attrsToMap(cert.issuer.attributes || []);
+    const publicKey = cert.publicKey;
+    let keyInfo = "Unknown";
+    if (publicKey && publicKey.n && publicKey.e) keyInfo = "RSA";
+    else if (publicKey && publicKey.Q) keyInfo = "EC / ECDSA";
+
+    let sanList = [];
+    const sanExt = getExtensionByName(cert.extensions || [], "subjectAltName");
+    if (sanExt && sanExt.altNames) {
+      sanList = sanExt.altNames.filter(a => a.type === 2).map(a => a.value);
+    }
+
+    return {
+      type: "Certificate",
+      subject,
+      issuer,
+      sanList,
+      publicKeyType: keyInfo,
+      sigOid: cert.siginfo ? cert.siginfo.algorithmOid : "",
+      notBefore: cert.validity.notBefore,
+      notAfter: cert.validity.notAfter,
+      serialNumber: cert.serialNumber,
+      pem
+    };
+  }
+
+  function compareDecodedAgainstInput(decoded){
+    const expected = getExpectedDetails();
+    const result = [];
+
+    function cmp(label, actual, expectedVal){
+      const ok = String(actual || "") === String(expectedVal || "");
+      result.push({
+        label,
+        actual: actual || "(not present)",
+        expected: expectedVal || "(not entered)",
+        status: ok ? "OK" : "Mismatch"
+      });
+    }
+
+    cmp("CN", decoded.subject.CN, expected.CN);
+    cmp("O", decoded.subject.O, expected.O);
+    cmp("OU", decoded.subject.OU, expected.OU);
+    cmp("L", decoded.subject.L, expected.L);
+    cmp("ST", decoded.subject.ST, expected.ST);
+    cmp("C", decoded.subject.C, expected.C);
+
+    const actualSans = (decoded.sanList || []).slice().sort().join(", ");
+    const expectedSans = (expected.SAN || []).slice().sort().join(", ");
+    result.push({
+      label: "SAN",
+      actual: actualSans || "(not present)",
+      expected: expectedSans || "(not entered)",
+      status: actualSans === expectedSans ? "OK" : "Mismatch"
+    });
+
+    return result;
+  }
+
+  function renderCompareTable(compareRows){
+    const rows = compareRows.map(r => {
+      let cls = "unknown";
+      let badge = '<span class="badge unk">Unknown</span>';
+      if (r.status === "OK") {
+        cls = "pass";
+        badge = '<span class="badge ok">OK</span>';
+      } else if (r.status === "Mismatch") {
+        cls = "fail";
+        badge = '<span class="badge bad">Mismatch</span>';
+      }
+      return `
+        <div class="status-item ${cls}">
+          <div class="status-top">
+            <strong>${r.label}</strong>
+            ${badge}
+          </div>
+          <div><strong>Decoded:</strong> ${r.actual}</div>
+          <div class="status-rule"><strong>Expected:</strong> ${r.expected}</div>
+        </div>
+      `;
+    }).join("");
+
+    return `<div class="status-grid">${rows}</div>`;
+  }
+
+  function renderDecodedCSR(decoded){
+    const compare = compareDecodedAgainstInput(decoded);
+    byId("csrDecodeResult").innerHTML = `
+      <div class="panel ok">
+        <strong>CSR decoded successfully</strong>
+        Public key type: ${decoded.publicKeyType}
+      </div>
+
+      <div class="readiness-grid">
+        <div class="readiness-box">
+          <h4>Decoded subject</h4>
+          <ul class="compare-list">
+            <li>CN: ${decoded.subject.CN || "(not present)"}</li>
+            <li>O: ${decoded.subject.O || "(not present)"}</li>
+            <li>OU: ${decoded.subject.OU || "(not present)"}</li>
+            <li>L: ${decoded.subject.L || "(not present)"}</li>
+            <li>ST: ${decoded.subject.ST || "(not present)"}</li>
+            <li>C: ${decoded.subject.C || "(not present)"}</li>
+          </ul>
+        </div>
+
+        <div class="readiness-box">
+          <h4>Decoded SAN</h4>
+          <ul class="compare-list">
+            ${(decoded.sanList && decoded.sanList.length ? decoded.sanList : ["(not present)"]).map(x => `<li>${x}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:16px;">Comparison with Certificate tab</div>
+      ${renderCompareTable(compare)}
+    `;
+  }
+
+  function renderDecodedCert(decoded){
+    const compare = compareDecodedAgainstInput(decoded);
+    byId("certDecodeResult").innerHTML = `
+      <div class="panel ok">
+        <strong>Certificate decoded successfully</strong>
+        Public key type: ${decoded.publicKeyType}
+      </div>
+
+      <div class="readiness-grid">
+        <div class="readiness-box">
+          <h4>Decoded subject</h4>
+          <ul class="compare-list">
+            <li>CN: ${decoded.subject.CN || "(not present)"}</li>
+            <li>O: ${decoded.subject.O || "(not present)"}</li>
+            <li>OU: ${decoded.subject.OU || "(not present)"}</li>
+            <li>L: ${decoded.subject.L || "(not present)"}</li>
+            <li>ST: ${decoded.subject.ST || "(not present)"}</li>
+            <li>C: ${decoded.subject.C || "(not present)"}</li>
+          </ul>
+        </div>
+
+        <div class="readiness-box">
+          <h4>Certificate details</h4>
+          <ul class="compare-list">
+            <li>Serial number: ${decoded.serialNumber || "(not present)"}</li>
+            <li>Valid from: ${decoded.notBefore ? decoded.notBefore.toString() : "(not present)"}</li>
+            <li>Valid to: ${decoded.notAfter ? decoded.notAfter.toString() : "(not present)"}</li>
+            <li>Issuer CN: ${decoded.issuer.CN || "(not present)"}</li>
+          </ul>
+        </div>
+
+        <div class="readiness-box">
+          <h4>Decoded SAN</h4>
+          <ul class="compare-list">
+            ${(decoded.sanList && decoded.sanList.length ? decoded.sanList : ["(not present)"]).map(x => `<li>${x}</li>`).join("")}
+          </ul>
+        </div>
+
+        <div class="readiness-box">
+          <h4>Interpretation</h4>
+          <div>Use the comparison below to check whether the issued certificate still matches the values entered in the Certificate tab.</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:16px;">Comparison with Certificate tab</div>
+      ${renderCompareTable(compare)}
+    `;
+  }
+
+  function handleFileUpload(input, targetTextareaId){
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e){
+      byId(targetTextareaId).value = e.target.result || "";
+    };
+    reader.onerror = function(){
+      alert("Failed to read the file.");
+    };
+    reader.readAsText(file);
+  }
+
+  function readDroppedFile(file, targetTextareaId){
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e){
+      byId(targetTextareaId).value = e.target.result || "";
+    };
+    reader.onerror = function(){
+      alert("Failed to read the dropped file.");
+    };
+    reader.readAsText(file);
+  }
+
+  function attachDropZone(dropZoneId, targetTextareaId){
+    const zone = byId(dropZoneId);
+    if (!zone) return;
+
+    ["dragenter", "dragover"].forEach(evt => {
+      zone.addEventListener(evt, function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        zone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "dragend", "drop"].forEach(evt => {
+      zone.addEventListener(evt, function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        zone.classList.remove("dragover");
+      });
+    });
+
+    zone.addEventListener("drop", function(e){
+      const files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || !files.length) return;
+      readDroppedFile(files[0], targetTextareaId);
+    });
+  }
+
+  function decodeArtifacts(){
+    const csrPem = byId("csrPem").value.trim();
+    const certPem = byId("certPem").value.trim();
+
+    if (!csrPem && !certPem) {
+      alert("Please paste or upload a CSR or certificate first.");
+      return;
+    }
+
+    if (csrPem) {
+      try {
+        const decodedCSR = parseCSR(csrPem);
+        renderDecodedCSR(decodedCSR);
+      } catch (e) {
+        byId("csrDecodeResult").innerHTML = `
+          <div class="panel bad">
+            <strong>CSR decode failed</strong>
+            ${e.message || "Unable to parse the CSR."}
+          </div>
+        `;
+      }
+    } else {
+      byId("csrDecodeResult").innerHTML = "";
+    }
+
+    if (certPem) {
+      try {
+        const decodedCert = parseCert(certPem);
+        renderDecodedCert(decodedCert);
+      } catch (e) {
+        byId("certDecodeResult").innerHTML = `
+          <div class="panel bad">
+            <strong>Certificate decode failed</strong>
+            ${e.message || "Unable to parse the certificate."}
+          </div>
+        `;
+      }
+    } else {
+      byId("certDecodeResult").innerHTML = "";
+    }
+
+    showTab("tab-decoder");
+  }
+
+  function clearDecoder(){
+    byId("csrFile").value = "";
+    byId("certFile").value = "";
+    byId("csrPem").value = "";
+    byId("certPem").value = "";
+    byId("csrDecodeResult").innerHTML = "";
+    byId("certDecodeResult").innerHTML = "";
   }
 
   function getActiveOutputArea(){
@@ -1874,15 +2387,11 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     [
       "osVersion","iisVersion","nginxVersion","apacheVersion","xamppVersion","phpVersion",
       "opensslVersion","opensshVersion","cn","san","org","ou","city","state","country","email",
-      "outputLinux","outputPS","outputGUI"
+      "outputLinux","outputPS","outputGUI","csrPem","certPem","csrFile","certFile"
     ].forEach(id => {
       if (byId(id)) byId(id).value = "";
     });
 
-    byId("platform").value = "Windows";
-    byId("outputLinux").value = "";
-    byId("outputPS").value = "";
-    byId("outputGUI").value = "";
     byId("resultArea").innerHTML = "";
     byId("readinessSummary").style.display = "none";
     byId("readinessSummary").innerHTML = "";
@@ -1896,19 +2405,52 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     byId("checkCertChain").innerHTML = "";
     byId("checkServiceSpecific").innerHTML = "";
     byId("checkCloseOut").innerHTML = "";
+    byId("csrDecodeResult").innerHTML = "";
+    byId("certDecodeResult").innerHTML = "";
+
     lastDownloads = [];
     lastAssessment = null;
     lastFormData = null;
+
+    byId("platform").value = "Windows";
     byId("scoreNumber").textContent = "--";
     byId("scoreSub").textContent = "Generate a result to assess the environment.";
     byId("scoreBar").style.width = "0%";
     byId("quickPills").innerHTML = `<div class="pill">No result yet</div>`;
+
+    document.querySelectorAll(".collapsible").forEach(c => {
+      c.classList.remove("open");
+      const marker = c.querySelector(".collapsible-head span:last-child");
+      if (marker) marker.textContent = "+";
+    });
+
+    ["colReadiness", "colDecoderCSR", "colPostDeploy"].forEach(id => {
+      const el = byId(id);
+      if (el) {
+        el.classList.add("open");
+        const marker = el.querySelector(".collapsible-head span:last-child");
+        if (marker) marker.textContent = "−";
+      }
+    });
+
     onPlatformChange();
+    syncOutputTabs();
     showTab("tab-env");
   }
 
   onPlatformChange();
   syncOutputTabs();
+  attachDropZone("csrDropZone", "csrPem");
+  attachDropZone("certDropZone", "certPem");
+
+  ["colReadiness", "colDecoderCSR", "colPostDeploy"].forEach(id => {
+    const el = byId(id);
+    if (el) {
+      el.classList.add("open");
+      const marker = el.querySelector(".collapsible-head span:last-child");
+      if (marker) marker.textContent = "−";
+    }
+  });
 </script>
 </body>
 </html>
