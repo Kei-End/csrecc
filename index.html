@@ -64,6 +64,17 @@
       max-width:980px;
     }
 
+    .permanent-reminder{
+      margin-top:14px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#fff1f2;
+      border:1px solid #fecdd3;
+      color:#991b1b;
+      font-size:13px;
+      font-weight:700;
+    }
+
     .hero-grid{
       margin-top:18px;
       display:grid;
@@ -143,10 +154,6 @@
       border:1px solid var(--line);
       border-radius:18px;
       box-shadow:0 8px 28px rgba(15,23,42,.05);
-    }
-
-    .card-body{
-      padding:22px;
     }
 
     .tabs{
@@ -736,6 +743,10 @@
       Guided CSR generation for Windows and Linux, built around ECC P-384 and SHA-256, with pre-submission checks for outdated server stacks and common failure patterns.
     </p>
 
+    <div class="permanent-reminder">
+      Permanent reminder: do not submit CSR content by copying it through UI, email, PDF, or chat applications. Use the original generated file whenever possible.
+    </div>
+
     <div class="hero-grid">
       <div class="stat-card">
         <div class="stat-title">Environment health score</div>
@@ -912,7 +923,7 @@
 
         <div class="panel info">
           <strong>Important</strong>
-          This page gives script output and guidance only. Run the script on the target server or on an approved admin workstation. Do not move CSR content through email, PDF, chat, or screenshots.
+          This page gives script output and guidance only. Run the script on the target server or on an approved admin workstation.
         </div>
 
         <div class="collapsible open" id="colReadiness">
@@ -993,9 +1004,9 @@
           </div>
         </div>
 
-        <div class="collapsible" id="colDetails">
+        <div class="collapsible open" id="colDetails">
           <button class="collapsible-head" onclick="toggleCollapse(this)">
-            <span>Check Details</span><span>+</span>
+            <span>Check Details</span><span>−</span>
           </button>
           <div class="collapsible-body">
             <div id="resultArea"></div>
@@ -1014,10 +1025,10 @@
           <div>
             <div class="field">
               <label for="csrFile">Upload CSR file</label>
-              <input id="csrFile" type="file" accept=".csr,.pem,.txt" onchange="handleFileUpload(this, 'csrPem')" hidden>
+              <input id="csrFile" type="file" accept=".csr,.pem,.txt,.req,.der" onchange="handleFileUpload(this, 'csrPem', 'csr')" hidden>
               <div class="drop-zone" id="csrDropZone" onclick="byId('csrFile').click()">
                 <strong>Drop CSR file here</strong>
-                <div class="small">or click to choose a file (.csr, .pem, .txt)</div>
+                <div class="small">or click to choose a file (.csr, .pem, .txt, .req, .der)</div>
               </div>
             </div>
             <div class="field" style="margin-top:12px;">
@@ -1029,10 +1040,10 @@
           <div>
             <div class="field">
               <label for="certFile">Upload certificate file</label>
-              <input id="certFile" type="file" accept=".crt,.cer,.pem,.txt" onchange="handleFileUpload(this, 'certPem')" hidden>
+              <input id="certFile" type="file" accept=".crt,.cer,.pem,.txt,.der" onchange="handleFileUpload(this, 'certPem', 'cert')" hidden>
               <div class="drop-zone" id="certDropZone" onclick="byId('certFile').click()">
                 <strong>Drop certificate file here</strong>
-                <div class="small">or click to choose a file (.crt, .cer, .pem, .txt)</div>
+                <div class="small">or click to choose a file (.crt, .cer, .pem, .txt, .der)</div>
               </div>
             </div>
             <div class="field" style="margin-top:12px;">
@@ -1167,11 +1178,6 @@
               <td>7.4.33+</td>
               <td>Checks bundled stack age against your known issue pattern.</td>
             </tr>
-            <tr>
-              <td>CSR handling</td>
-              <td>No copy-paste through formatted channels</td>
-              <td>Reduces risk of malformed requests.</td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -1200,13 +1206,6 @@
               <button class="acc-head" onclick="toggleAcc(this)">Bundled stacks like XAMPP <span>+</span></button>
               <div class="acc-body">
                 Bundled platforms often carry multiple versions underneath. A problem might not be the visible application layer alone, but Apache, PHP, or OpenSSL sitting behind it.
-              </div>
-            </div>
-
-            <div class="acc-item">
-              <button class="acc-head" onclick="toggleAcc(this)">Copy-paste risk <span>+</span></button>
-              <div class="acc-body">
-                CSR text copied through UI, email, PDF, or chat can be altered by formatting, hidden breaks, or removed headers. Submitting the original generated file is safer.
               </div>
             </div>
 
@@ -1689,8 +1688,6 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       } else add("PHP", "Not provided", `>= ${KB.baselines.phpMin}`, "Warning", "PHP version not provided.");
     }
 
-    add("CSR handling", "Planned workflow", "Original file only", "Warning", "Do not copy CSR text through UI, email, PDF, or chat applications.");
-
     score = Math.max(0, Math.min(100, score));
 
     return {
@@ -1809,7 +1806,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       `Confirm target profile is ECC P-384 with SHA-256.`,
       `Generate the request on the target server or approved admin workstation.`,
       `Keep the private key under agency control. Do not export or share it unless there is an approved process.`,
-      `Use the original request file for submission. Do not copy CSR text through UI, email, PDF, or chat.`,
+      `Use the original request file for submission.`,
       `Confirm CN is correct: ${data.cn}.`,
       `Confirm SAN list is complete: ${data.sans.join(", ")}.`,
       `Verify the server stack entered in the form matches the actual target environment.`,
@@ -2092,6 +2089,24 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     };
   }
 
+  function wrapPem(label, bytes){
+    const b64 = forge.util.encode64(bytes);
+    const lines = b64.match(/.{1,64}/g) || [];
+    return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----`;
+  }
+
+  function normalisePemText(text, kind){
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return "";
+    if (trimmed.includes("BEGIN CERTIFICATE REQUEST")) return trimmed;
+    if (trimmed.includes("BEGIN NEW CERTIFICATE REQUEST")) {
+      return trimmed.replace("BEGIN NEW CERTIFICATE REQUEST", "BEGIN CERTIFICATE REQUEST")
+                    .replace("END NEW CERTIFICATE REQUEST", "END CERTIFICATE REQUEST");
+    }
+    if (trimmed.includes("BEGIN CERTIFICATE")) return trimmed;
+    return trimmed;
+  }
+
   function compareDecodedAgainstInput(decoded){
     const expected = getExpectedDetails();
     const result = [];
@@ -2234,34 +2249,42 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     `;
   }
 
-  function handleFileUpload(input, targetTextareaId){
+  async function readFileAsArrayBuffer(file){
+    return await file.arrayBuffer();
+  }
+
+  async function handleFileUpload(input, targetTextareaId, kind){
     const file = input.files && input.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function(e){
-      byId(targetTextareaId).value = e.target.result || "";
-    };
-    reader.onerror = function(){
+    try {
+      const buffer = await readFileAsArrayBuffer(file);
+      const bytes = new Uint8Array(buffer);
+      const text = new TextDecoder().decode(bytes);
+      let output = normalisePemText(text, kind);
+
+      if (!output.includes("BEGIN ")) {
+        const binary = Array.from(bytes).map(b => String.fromCharCode(b)).join("");
+        if (kind === "csr") {
+          output = wrapPem("CERTIFICATE REQUEST", binary);
+        } else {
+          output = wrapPem("CERTIFICATE", binary);
+        }
+      }
+
+      byId(targetTextareaId).value = output;
+    } catch (e) {
       alert("Failed to read the file.");
-    };
-    reader.readAsText(file);
+    }
   }
 
-  function readDroppedFile(file, targetTextareaId){
+  function readDroppedFile(file, targetTextareaId, kind){
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e){
-      byId(targetTextareaId).value = e.target.result || "";
-    };
-    reader.onerror = function(){
-      alert("Failed to read the dropped file.");
-    };
-    reader.readAsText(file);
+    const pseudoInput = { files: [file] };
+    handleFileUpload(pseudoInput, targetTextareaId, kind);
   }
 
-  function attachDropZone(dropZoneId, targetTextareaId){
+  function attachDropZone(dropZoneId, targetTextareaId, kind){
     const zone = byId(dropZoneId);
     if (!zone) return;
 
@@ -2284,18 +2307,21 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     zone.addEventListener("drop", function(e){
       const files = e.dataTransfer && e.dataTransfer.files;
       if (!files || !files.length) return;
-      readDroppedFile(files[0], targetTextareaId);
+      readDroppedFile(files[0], targetTextareaId, kind);
     });
   }
 
   function decodeArtifacts(){
-    const csrPem = byId("csrPem").value.trim();
-    const certPem = byId("certPem").value.trim();
+    const csrPem = normalisePemText(byId("csrPem").value, "csr");
+    const certPem = normalisePemText(byId("certPem").value, "cert");
 
     if (!csrPem && !certPem) {
       alert("Please paste or upload a CSR or certificate first.");
       return;
     }
+
+    byId("csrPem").value = csrPem;
+    byId("certPem").value = certPem;
 
     if (csrPem) {
       try {
@@ -2424,7 +2450,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       if (marker) marker.textContent = "+";
     });
 
-    ["colReadiness", "colDecoderCSR", "colPostDeploy"].forEach(id => {
+    ["colReadiness", "colDetails", "colDecoderCSR", "colPostDeploy"].forEach(id => {
       const el = byId(id);
       if (el) {
         el.classList.add("open");
@@ -2440,10 +2466,10 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
 
   onPlatformChange();
   syncOutputTabs();
-  attachDropZone("csrDropZone", "csrPem");
-  attachDropZone("certDropZone", "certPem");
+  attachDropZone("csrDropZone", "csrPem", "csr");
+  attachDropZone("certDropZone", "certPem", "cert");
 
-  ["colReadiness", "colDecoderCSR", "colPostDeploy"].forEach(id => {
+  ["colReadiness", "colDetails", "colDecoderCSR", "colPostDeploy"].forEach(id => {
     const el = byId(id);
     if (el) {
       el.classList.add("open");
