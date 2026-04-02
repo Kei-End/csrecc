@@ -252,10 +252,6 @@
       font-size:14px;
     }
 
-    input[type="file"]{
-      padding:10px;
-    }
-
     input:focus, select:focus, textarea:focus{
       outline:none;
       border-color:var(--primary);
@@ -655,7 +651,6 @@
       background:var(--soft);
     }
 
-    /* Decoder tab styles */
     .decoder-shell{
       background:linear-gradient(180deg,var(--decoder-bg) 0%, #08101d 100%);
       color:var(--decoder-text);
@@ -1320,7 +1315,7 @@
 
 (Begins with -----BEGIN CERTIFICATE REQUEST----- or -----BEGIN CERTIFICATE-----)"></textarea>
 
-            <input id="fileInput" class="decoder-file-input" type="file" accept=".pem,.crt,.cer,.csr,.key,.txt" />
+            <input id="fileInput" class="decoder-file-input" type="file" accept=".pem,.crt,.cer,.csr,.req,.der,.key,.txt" />
 
             <div class="decoder-toolbar">
               <button class="decoder-btn decoder-btn-primary" id="decodeBtn">Decode</button>
@@ -1482,7 +1477,7 @@
           </div>
 
           <div class="reference">
-            Manual alignment note: the attached document lists ECC/ECDSA with P-384 and SHA-256, Windows Server/IIS guidance, Microsoft Software Key Storage Provider, and Linux OpenSSL 1.1.1 or later. :contentReference[oaicite:0]{index=0}
+            Manual alignment note: the attached document lists ECC/ECDSA with P-384 and SHA-256, Windows Server 2016+ for IIS, and OpenSSL 1.1.1+ for Nginx and Apache. :contentReference[oaicite:1]{index=1}
           </div>
         </div>
       </div>
@@ -2312,7 +2307,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     lastDownloads.forEach(file => downloadText(file.filename, file.content));
   }
 
-  /* Decoder functionality */
+  /* Decoder logic */
   const pemInput = byId("pemInput");
   const fileInput = byId("fileInput");
   const decodeBtn = byId("decodeBtn");
@@ -2358,23 +2353,38 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     return `<span class="decoder-badge decoder-badge-valid">✅ Valid (${days} days remaining)</span>`;
   }
 
-  function wrapPem(label, bytes){
-    const b64 = forge.util.encode64(bytes);
+  function wrapPem(label, bytesBinary){
+    const b64 = forge.util.encode64(bytesBinary);
     const lines = b64.match(/.{1,64}/g) || [];
     return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----`;
+  }
+
+  function uint8ToBinaryString(bytes){
+    let out = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      out += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return out;
   }
 
   async function readFileToPem(file){
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer);
-    const text = new TextDecoder().decode(bytes).trim();
+
+    let text = "";
+    try {
+      text = new TextDecoder().decode(bytes).trim();
+    } catch (e) {
+      text = "";
+    }
 
     if (text.includes("-----BEGIN")) return text;
 
-    const binary = Array.from(bytes).map(b => String.fromCharCode(b)).join("");
     const ext = (file.name.split(".").pop() || "").toLowerCase();
+    const binary = uint8ToBinaryString(bytes);
 
-    if (ext === "cer" || ext === "crt" || ext === "der") {
+    if (ext === "cer" || ext === "crt") {
       return wrapPem("CERTIFICATE", binary);
     }
 
@@ -2382,7 +2392,20 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       return wrapPem("CERTIFICATE REQUEST", binary);
     }
 
-    return text;
+    if (ext === "der") {
+      try {
+        forge.pki.certificateFromAsn1(forge.asn1.fromDer(binary));
+        return wrapPem("CERTIFICATE", binary);
+      } catch (e) {}
+
+      try {
+        forge.pki.certificationRequestFromAsn1(forge.asn1.fromDer(binary));
+        return wrapPem("CERTIFICATE REQUEST", binary);
+      } catch (e) {}
+    }
+
+    if (text) return text;
+    throw new Error("Unsupported or unreadable file");
   }
 
   function normalisePem(pem){
@@ -2543,7 +2566,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     `);
   }
 
-  function renderGeneralSectionForCert(cert, pem){
+  function renderGeneralSectionForCert(cert){
     const subject = attrsToMap(cert.subject.attributes);
     const remaining = daysRemaining(cert.validity.notAfter);
     const validity = remaining === null
@@ -2743,7 +2766,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
           ${decoderValidityBadge(cert.validity.notAfter)}
         </div>
 
-        ${renderGeneralSectionForCert(cert, pem)}
+        ${renderGeneralSectionForCert(cert)}
         ${renderSubjectSection(subject, "Subject")}
         ${renderSubjectSection(issuer, "Issuer")}
         ${renderPublicKeySection(keyInfo)}
@@ -2887,20 +2910,9 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     cert.setSubject(attrs);
     cert.setIssuer(attrs);
     cert.setExtensions([
-      {
-        name: "basicConstraints",
-        cA: false
-      },
-      {
-        name: "keyUsage",
-        digitalSignature: true,
-        keyEncipherment: true
-      },
-      {
-        name: "extKeyUsage",
-        serverAuth: true,
-        clientAuth: true
-      },
+      { name: "basicConstraints", cA: false },
+      { name: "keyUsage", digitalSignature: true, keyEncipherment: true },
+      { name: "extKeyUsage", serverAuth: true, clientAuth: true },
       {
         name: "subjectAltName",
         altNames: [
@@ -2909,9 +2921,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
           { type: 2, value: "portal.example.com" }
         ]
       },
-      {
-        name: "subjectKeyIdentifier"
-      }
+      { name: "subjectKeyIdentifier" }
     ]);
 
     cert.sign(keys.privateKey, forge.md.sha256.create());
