@@ -25,6 +25,23 @@
       --info-bg:#eff6ff;
       --soft:#f8fafc;
       --pill:#e2e8f0;
+
+      --decoder-bg:#0b1220;
+      --decoder-panel:#111a2e;
+      --decoder-panel-2:#16213a;
+      --decoder-line:#263552;
+      --decoder-text:#f8fafc;
+      --decoder-muted:#94a3b8;
+      --decoder-primary:#3b82f6;
+      --decoder-primary-2:#2563eb;
+      --decoder-soft:#0f172a;
+      --decoder-ok:#16a34a;
+      --decoder-ok-bg:#052e16;
+      --decoder-warn:#f59e0b;
+      --decoder-warn-bg:#3b2a07;
+      --decoder-bad:#ef4444;
+      --decoder-bad-bg:#3b0a0a;
+      --decoder-chip:#1e293b;
     }
 
     * { box-sizing: border-box; }
@@ -638,53 +655,319 @@
       background:var(--soft);
     }
 
-    .decoder-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:16px;
+    /* Decoder tab styles */
+    .decoder-shell{
+      background:linear-gradient(180deg,var(--decoder-bg) 0%, #08101d 100%);
+      color:var(--decoder-text);
+      border:1px solid var(--decoder-line);
+      border-radius:20px;
+      padding:20px;
+      box-shadow:0 14px 44px rgba(0,0,0,.22);
     }
 
-    .compare-list{
+    .decoder-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .decoder-brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:700;
+      font-size:18px;
+      color:#fff;
+    }
+
+    .decoder-brand-badge{
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      background:linear-gradient(135deg,#1d4ed8,#3b82f6);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+    }
+
+    .decoder-title{
+      margin:0 0 6px 0;
+      font-size:30px;
+      color:#fff;
+    }
+
+    .decoder-sub{
+      margin:0 0 16px 0;
+      color:var(--decoder-muted);
+      font-size:14px;
+    }
+
+    .decoder-input-panel{
+      display:grid;
+      gap:14px;
+    }
+
+    .decoder-textarea{
+      width:100%;
+      min-height:240px;
+      resize:vertical;
+      border:1px solid var(--decoder-line);
+      border-radius:16px;
+      padding:16px;
+      background:#0a1324;
+      color:var(--decoder-text);
+      font-size:14px;
+      font-family:Consolas,"Courier New",monospace;
+      outline:none;
+    }
+
+    .decoder-textarea:focus{
+      border-color:var(--decoder-primary);
+      box-shadow:0 0 0 3px rgba(59,130,246,.18);
+    }
+
+    .decoder-toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .decoder-btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      font-weight:700;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .decoder-btn-primary{
+      background:var(--decoder-primary);
+      color:#fff;
+    }
+
+    .decoder-btn-primary:hover{ background:var(--decoder-primary-2); }
+
+    .decoder-btn-outline{
+      background:transparent;
+      color:#fff;
+      border:1px solid var(--decoder-line);
+    }
+
+    .decoder-btn-outline:hover{
+      background:rgba(255,255,255,.04);
+    }
+
+    .decoder-btn-danger{
+      background:#2b1220;
+      color:#fecaca;
+      border:1px solid #4b1d2d;
+    }
+
+    .decoder-file-input{
+      display:none;
+    }
+
+    .decoder-error{
+      margin-top:14px;
+      border:1px solid #7f1d1d;
+      background:rgba(127,29,29,.25);
+      color:#fecaca;
+      border-radius:14px;
+      padding:12px 14px;
+      display:none;
+    }
+
+    .decoder-results{
+      margin-top:22px;
+      display:none;
+    }
+
+    .decoder-card{
+      background:rgba(17,26,46,.9);
+      border:1px solid var(--decoder-line);
+      border-radius:18px;
+      padding:18px;
+      color:#fff;
+    }
+
+    .decoder-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+      align-items:center;
+    }
+
+    .decoder-chip{
+      background:var(--decoder-chip);
+      border:1px solid var(--decoder-line);
+      color:#fff;
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .decoder-badge{
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      font-weight:700;
+      border:1px solid transparent;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .decoder-badge-valid{
+      background:var(--decoder-ok-bg);
+      color:#86efac;
+      border-color:#14532d;
+    }
+
+    .decoder-badge-soon{
+      background:var(--decoder-warn-bg);
+      color:#fcd34d;
+      border-color:#854d0e;
+    }
+
+    .decoder-badge-expired{
+      background:var(--decoder-bad-bg);
+      color:#fca5a5;
+      border-color:#7f1d1d;
+    }
+
+    .decoder-section{
+      margin-top:16px;
+      border:1px solid var(--decoder-line);
+      border-radius:16px;
+      overflow:hidden;
+      background:#0d1628;
+    }
+
+    .decoder-section-head{
+      width:100%;
+      border:none;
+      background:#0d1628;
+      color:#fff;
+      text-align:left;
+      padding:14px 16px;
+      font-weight:700;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+    }
+
+    .decoder-section-body{
+      display:block;
+      padding:0 16px 16px 16px;
+    }
+
+    .decoder-section.collapsed .decoder-section-body{
+      display:none;
+    }
+
+    .decoder-kv-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .decoder-kv{
+      border:1px solid var(--decoder-line);
+      background:var(--decoder-panel-2);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .decoder-kv-label{
+      font-size:12px;
+      color:var(--decoder-muted);
+      margin-bottom:6px;
+      font-weight:700;
+    }
+
+    .decoder-kv-value{
+      font-size:14px;
+      color:#fff;
+      word-break:break-word;
+    }
+
+    .decoder-kv-value code{
+      font-family:Consolas,"Courier New",monospace;
+      font-size:13px;
+      color:#dbeafe;
+    }
+
+    .decoder-value-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+
+    .decoder-copy-btn{
+      flex-shrink:0;
+      background:transparent;
+      color:#cbd5e1;
+      border:1px solid var(--decoder-line);
+      border-radius:10px;
+      padding:6px 8px;
+      cursor:pointer;
+      font-size:12px;
+    }
+
+    .decoder-copy-btn:hover{
+      background:rgba(255,255,255,.04);
+    }
+
+    .decoder-list{
       margin:0;
       padding-left:18px;
     }
 
-    .compare-list li{
-      margin:5px 0;
+    .decoder-list li{
+      margin:4px 0;
+      color:#fff;
     }
 
-    .drop-zone{
-      border:2px dashed #94a3b8;
-      border-radius:14px;
-      background:#f8fafc;
-      padding:18px;
-      text-align:center;
-      transition:.2s ease;
+    details.decoder-long{
+      border:1px dashed var(--decoder-line);
+      border-radius:12px;
+      padding:10px;
+      background:#0a1324;
+    }
+
+    details.decoder-long summary{
       cursor:pointer;
+      color:#cbd5e1;
+      font-weight:700;
     }
 
-    .drop-zone:hover{
-      border-color:var(--primary);
-      background:#f0fdfa;
-    }
-
-    .drop-zone.dragover{
-      border-color:var(--primary);
-      background:#ecfdf5;
-      box-shadow:0 0 0 3px rgba(15,118,110,.12);
-    }
-
-    .drop-zone strong{
-      display:block;
-      margin-bottom:6px;
-    }
-
-    .drop-zone .small{
+    pre.decoder-raw{
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin:10px 0 0 0;
+      color:#dbeafe;
       font-size:12px;
-      color:var(--muted);
+      font-family:Consolas,"Courier New",monospace;
     }
 
-    @media (max-width: 1080px){
+    .decoder-footer{
+      margin-top:18px;
+      color:var(--decoder-muted);
+      font-size:12px;
+      text-align:center;
+    }
+
+    @media (max-width:1080px){
       .layout{
         grid-template-columns:1fr;
       }
@@ -694,12 +977,15 @@
       .drawer{
         position:static;
       }
-      .decoder-grid{
+    }
+
+    @media (max-width:800px){
+      .decoder-kv-grid{
         grid-template-columns:1fr;
       }
     }
 
-    @media (max-width: 760px){
+    @media (max-width:760px){
       .grid, .readiness-grid{
         grid-template-columns:1fr;
       }
@@ -712,13 +998,16 @@
       .readiness-score{
         text-align:left;
       }
+      .decoder-title{
+        font-size:28px;
+      }
     }
 
     @media print{
       body{
         background:#fff;
       }
-      .hero, .drawer, .tabs, .subtabs, .actions{
+      .hero, .drawer, .tabs, .subtabs, .actions, .decoder-toolbar{
         display:none !important;
       }
       .card{
@@ -1015,64 +1304,39 @@
       </div>
 
       <div id="tab-decoder" class="tab-panel">
-        <h2 class="section-title">CSR &amp; Certificate Decoder</h2>
-        <div class="panel info">
-          <strong>Use case</strong>
-          Paste your CSR or certificate after generation or issuance, or upload the file directly. This section will decode the object and compare the decoded values against the details entered in the Certificate tab.
-        </div>
-
-        <div class="decoder-grid">
-          <div>
-            <div class="field">
-              <label for="csrFile">Upload CSR file</label>
-              <input id="csrFile" type="file" accept=".csr,.pem,.txt,.req,.der" onchange="handleFileUpload(this, 'csrPem', 'csr')" hidden>
-              <div class="drop-zone" id="csrDropZone" onclick="byId('csrFile').click()">
-                <strong>Drop CSR file here</strong>
-                <div class="small">or click to choose a file (.csr, .pem, .txt, .req, .der)</div>
-              </div>
-            </div>
-            <div class="field" style="margin-top:12px;">
-              <label for="csrPem">Paste CSR PEM</label>
-              <textarea id="csrPem" placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;...&#10;-----END CERTIFICATE REQUEST-----"></textarea>
+        <div class="decoder-shell">
+          <div class="decoder-top">
+            <div class="decoder-brand">
+              <div class="decoder-brand-badge">C</div>
+              <div>CSR Decoder</div>
             </div>
           </div>
 
-          <div>
-            <div class="field">
-              <label for="certFile">Upload certificate file</label>
-              <input id="certFile" type="file" accept=".crt,.cer,.pem,.txt,.der" onchange="handleFileUpload(this, 'certPem', 'cert')" hidden>
-              <div class="drop-zone" id="certDropZone" onclick="byId('certFile').click()">
-                <strong>Drop certificate file here</strong>
-                <div class="small">or click to choose a file (.crt, .cer, .pem, .txt, .der)</div>
-              </div>
+          <h2 class="decoder-title">CSR Decoder</h2>
+          <p class="decoder-sub">Decode CSRs.</p>
+
+          <div class="decoder-input-panel">
+            <textarea id="pemInput" class="decoder-textarea" placeholder="Paste your PEM-encoded CSR or Certificate here...
+
+(Begins with -----BEGIN CERTIFICATE REQUEST----- or -----BEGIN CERTIFICATE-----)"></textarea>
+
+            <input id="fileInput" class="decoder-file-input" type="file" accept=".pem,.crt,.cer,.csr,.key,.txt" />
+
+            <div class="decoder-toolbar">
+              <button class="decoder-btn decoder-btn-primary" id="decodeBtn">Decode</button>
+              <button class="decoder-btn decoder-btn-outline" id="loadFileBtn">Load from File</button>
+              <button class="decoder-btn decoder-btn-outline" id="loadExampleCsrBtn">Load Example CSR</button>
+              <button class="decoder-btn decoder-btn-outline" id="loadExampleCertBtn">Load Example Certificate</button>
+              <button class="decoder-btn decoder-btn-danger" id="clearBtn" style="display:none;">Clear</button>
             </div>
-            <div class="field" style="margin-top:12px;">
-              <label for="certPem">Paste Certificate PEM</label>
-              <textarea id="certPem" placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
-            </div>
+
+            <div class="decoder-error" id="errorBox"></div>
           </div>
-        </div>
 
-        <div class="actions" style="margin-top:16px;">
-          <button class="primary" onclick="decodeArtifacts()">Decode &amp; Compare</button>
-          <button class="secondary" onclick="clearDecoder()">Clear Decoder</button>
-        </div>
+          <div class="decoder-results" id="results"></div>
 
-        <div class="collapsible open" id="colDecoderCSR">
-          <button class="collapsible-head" onclick="toggleCollapse(this)">
-            <span>CSR Decoder Result</span><span>−</span>
-          </button>
-          <div class="collapsible-body">
-            <div id="csrDecodeResult"></div>
-          </div>
-        </div>
-
-        <div class="collapsible" id="colDecoderCert">
-          <button class="collapsible-head" onclick="toggleCollapse(this)">
-            <span>Certificate Decoder Result</span><span>+</span>
-          </button>
-          <div class="collapsible-body">
-            <div id="certDecodeResult"></div>
+          <div class="decoder-footer">
+            All decoding is performed locally in your browser. No data is sent to any server.
           </div>
         </div>
       </div>
@@ -2006,367 +2270,6 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     showTab("tab-output");
   }
 
-  function getExpectedDetails(){
-    const data = readForm();
-    return {
-      CN: data.cn,
-      O: data.org,
-      OU: data.ou,
-      L: data.city,
-      ST: data.state,
-      C: data.country,
-      SAN: data.sans
-    };
-  }
-
-  function attrsToMap(attrs){
-    const map = {};
-    attrs.forEach(a => {
-      const key = a.shortName || a.name || a.type;
-      map[key] = a.value;
-    });
-    return map;
-  }
-
-  function getExtensionByName(exts, name){
-    if (!exts) return null;
-    return exts.find(e => e.name === name);
-  }
-
-  function parseCSR(pem){
-    const csr = forge.pki.certificationRequestFromPem(pem);
-    const subject = attrsToMap(csr.subject.attributes || []);
-    const publicKey = csr.publicKey;
-    let keyInfo = "Unknown";
-    if (publicKey && publicKey.n && publicKey.e) keyInfo = "RSA";
-    else if (publicKey && publicKey.Q) keyInfo = "EC / ECDSA";
-
-    let sanList = [];
-    const extReq = (csr.getAttribute && csr.getAttribute({ name: "extensionRequest" })) || null;
-    if (extReq && extReq.extensions) {
-      const sanExt = getExtensionByName(extReq.extensions, "subjectAltName");
-      if (sanExt && sanExt.altNames) {
-        sanList = sanExt.altNames.filter(a => a.type === 2).map(a => a.value);
-      }
-    }
-
-    return {
-      type: "CSR",
-      subject,
-      sanList,
-      publicKeyType: keyInfo,
-      sigOid: csr.signatureOid || "",
-      pem
-    };
-  }
-
-  function parseCert(pem){
-    const cert = forge.pki.certificateFromPem(pem);
-    const subject = attrsToMap(cert.subject.attributes || []);
-    const issuer = attrsToMap(cert.issuer.attributes || []);
-    const publicKey = cert.publicKey;
-    let keyInfo = "Unknown";
-    if (publicKey && publicKey.n && publicKey.e) keyInfo = "RSA";
-    else if (publicKey && publicKey.Q) keyInfo = "EC / ECDSA";
-
-    let sanList = [];
-    const sanExt = getExtensionByName(cert.extensions || [], "subjectAltName");
-    if (sanExt && sanExt.altNames) {
-      sanList = sanExt.altNames.filter(a => a.type === 2).map(a => a.value);
-    }
-
-    return {
-      type: "Certificate",
-      subject,
-      issuer,
-      sanList,
-      publicKeyType: keyInfo,
-      sigOid: cert.siginfo ? cert.siginfo.algorithmOid : "",
-      notBefore: cert.validity.notBefore,
-      notAfter: cert.validity.notAfter,
-      serialNumber: cert.serialNumber,
-      pem
-    };
-  }
-
-  function wrapPem(label, bytes){
-    const b64 = forge.util.encode64(bytes);
-    const lines = b64.match(/.{1,64}/g) || [];
-    return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----`;
-  }
-
-  function normalisePemText(text, kind){
-    const trimmed = String(text || "").trim();
-    if (!trimmed) return "";
-    if (trimmed.includes("BEGIN CERTIFICATE REQUEST")) return trimmed;
-    if (trimmed.includes("BEGIN NEW CERTIFICATE REQUEST")) {
-      return trimmed.replace("BEGIN NEW CERTIFICATE REQUEST", "BEGIN CERTIFICATE REQUEST")
-                    .replace("END NEW CERTIFICATE REQUEST", "END CERTIFICATE REQUEST");
-    }
-    if (trimmed.includes("BEGIN CERTIFICATE")) return trimmed;
-    return trimmed;
-  }
-
-  function compareDecodedAgainstInput(decoded){
-    const expected = getExpectedDetails();
-    const result = [];
-
-    function cmp(label, actual, expectedVal){
-      const ok = String(actual || "") === String(expectedVal || "");
-      result.push({
-        label,
-        actual: actual || "(not present)",
-        expected: expectedVal || "(not entered)",
-        status: ok ? "OK" : "Mismatch"
-      });
-    }
-
-    cmp("CN", decoded.subject.CN, expected.CN);
-    cmp("O", decoded.subject.O, expected.O);
-    cmp("OU", decoded.subject.OU, expected.OU);
-    cmp("L", decoded.subject.L, expected.L);
-    cmp("ST", decoded.subject.ST, expected.ST);
-    cmp("C", decoded.subject.C, expected.C);
-
-    const actualSans = (decoded.sanList || []).slice().sort().join(", ");
-    const expectedSans = (expected.SAN || []).slice().sort().join(", ");
-    result.push({
-      label: "SAN",
-      actual: actualSans || "(not present)",
-      expected: expectedSans || "(not entered)",
-      status: actualSans === expectedSans ? "OK" : "Mismatch"
-    });
-
-    return result;
-  }
-
-  function renderCompareTable(compareRows){
-    const rows = compareRows.map(r => {
-      let cls = "unknown";
-      let badge = '<span class="badge unk">Unknown</span>';
-      if (r.status === "OK") {
-        cls = "pass";
-        badge = '<span class="badge ok">OK</span>';
-      } else if (r.status === "Mismatch") {
-        cls = "fail";
-        badge = '<span class="badge bad">Mismatch</span>';
-      }
-      return `
-        <div class="status-item ${cls}">
-          <div class="status-top">
-            <strong>${r.label}</strong>
-            ${badge}
-          </div>
-          <div><strong>Decoded:</strong> ${r.actual}</div>
-          <div class="status-rule"><strong>Expected:</strong> ${r.expected}</div>
-        </div>
-      `;
-    }).join("");
-
-    return `<div class="status-grid">${rows}</div>`;
-  }
-
-  function renderDecodedCSR(decoded){
-    const compare = compareDecodedAgainstInput(decoded);
-    byId("csrDecodeResult").innerHTML = `
-      <div class="panel ok">
-        <strong>CSR decoded successfully</strong>
-        Public key type: ${decoded.publicKeyType}
-      </div>
-
-      <div class="readiness-grid">
-        <div class="readiness-box">
-          <h4>Decoded subject</h4>
-          <ul class="compare-list">
-            <li>CN: ${decoded.subject.CN || "(not present)"}</li>
-            <li>O: ${decoded.subject.O || "(not present)"}</li>
-            <li>OU: ${decoded.subject.OU || "(not present)"}</li>
-            <li>L: ${decoded.subject.L || "(not present)"}</li>
-            <li>ST: ${decoded.subject.ST || "(not present)"}</li>
-            <li>C: ${decoded.subject.C || "(not present)"}</li>
-          </ul>
-        </div>
-
-        <div class="readiness-box">
-          <h4>Decoded SAN</h4>
-          <ul class="compare-list">
-            ${(decoded.sanList && decoded.sanList.length ? decoded.sanList : ["(not present)"]).map(x => `<li>${x}</li>`).join("")}
-          </ul>
-        </div>
-      </div>
-
-      <div class="section-title" style="margin-top:16px;">Comparison with Certificate tab</div>
-      ${renderCompareTable(compare)}
-    `;
-  }
-
-  function renderDecodedCert(decoded){
-    const compare = compareDecodedAgainstInput(decoded);
-    byId("certDecodeResult").innerHTML = `
-      <div class="panel ok">
-        <strong>Certificate decoded successfully</strong>
-        Public key type: ${decoded.publicKeyType}
-      </div>
-
-      <div class="readiness-grid">
-        <div class="readiness-box">
-          <h4>Decoded subject</h4>
-          <ul class="compare-list">
-            <li>CN: ${decoded.subject.CN || "(not present)"}</li>
-            <li>O: ${decoded.subject.O || "(not present)"}</li>
-            <li>OU: ${decoded.subject.OU || "(not present)"}</li>
-            <li>L: ${decoded.subject.L || "(not present)"}</li>
-            <li>ST: ${decoded.subject.ST || "(not present)"}</li>
-            <li>C: ${decoded.subject.C || "(not present)"}</li>
-          </ul>
-        </div>
-
-        <div class="readiness-box">
-          <h4>Certificate details</h4>
-          <ul class="compare-list">
-            <li>Serial number: ${decoded.serialNumber || "(not present)"}</li>
-            <li>Valid from: ${decoded.notBefore ? decoded.notBefore.toString() : "(not present)"}</li>
-            <li>Valid to: ${decoded.notAfter ? decoded.notAfter.toString() : "(not present)"}</li>
-            <li>Issuer CN: ${decoded.issuer.CN || "(not present)"}</li>
-          </ul>
-        </div>
-
-        <div class="readiness-box">
-          <h4>Decoded SAN</h4>
-          <ul class="compare-list">
-            ${(decoded.sanList && decoded.sanList.length ? decoded.sanList : ["(not present)"]).map(x => `<li>${x}</li>`).join("")}
-          </ul>
-        </div>
-
-        <div class="readiness-box">
-          <h4>Interpretation</h4>
-          <div>Use the comparison below to check whether the issued certificate still matches the values entered in the Certificate tab.</div>
-        </div>
-      </div>
-
-      <div class="section-title" style="margin-top:16px;">Comparison with Certificate tab</div>
-      ${renderCompareTable(compare)}
-    `;
-  }
-
-  async function readFileAsArrayBuffer(file){
-    return await file.arrayBuffer();
-  }
-
-  async function handleFileUpload(input, targetTextareaId, kind){
-    const file = input.files && input.files[0];
-    if (!file) return;
-
-    try {
-      const buffer = await readFileAsArrayBuffer(file);
-      const bytes = new Uint8Array(buffer);
-      const text = new TextDecoder().decode(bytes);
-      let output = normalisePemText(text, kind);
-
-      if (!output.includes("BEGIN ")) {
-        const binary = Array.from(bytes).map(b => String.fromCharCode(b)).join("");
-        if (kind === "csr") {
-          output = wrapPem("CERTIFICATE REQUEST", binary);
-        } else {
-          output = wrapPem("CERTIFICATE", binary);
-        }
-      }
-
-      byId(targetTextareaId).value = output;
-    } catch (e) {
-      alert("Failed to read the file.");
-    }
-  }
-
-  function readDroppedFile(file, targetTextareaId, kind){
-    if (!file) return;
-    const pseudoInput = { files: [file] };
-    handleFileUpload(pseudoInput, targetTextareaId, kind);
-  }
-
-  function attachDropZone(dropZoneId, targetTextareaId, kind){
-    const zone = byId(dropZoneId);
-    if (!zone) return;
-
-    ["dragenter", "dragover"].forEach(evt => {
-      zone.addEventListener(evt, function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        zone.classList.add("dragover");
-      });
-    });
-
-    ["dragleave", "dragend", "drop"].forEach(evt => {
-      zone.addEventListener(evt, function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        zone.classList.remove("dragover");
-      });
-    });
-
-    zone.addEventListener("drop", function(e){
-      const files = e.dataTransfer && e.dataTransfer.files;
-      if (!files || !files.length) return;
-      readDroppedFile(files[0], targetTextareaId, kind);
-    });
-  }
-
-  function decodeArtifacts(){
-    const csrPem = normalisePemText(byId("csrPem").value, "csr");
-    const certPem = normalisePemText(byId("certPem").value, "cert");
-
-    if (!csrPem && !certPem) {
-      alert("Please paste or upload a CSR or certificate first.");
-      return;
-    }
-
-    byId("csrPem").value = csrPem;
-    byId("certPem").value = certPem;
-
-    if (csrPem) {
-      try {
-        const decodedCSR = parseCSR(csrPem);
-        renderDecodedCSR(decodedCSR);
-      } catch (e) {
-        byId("csrDecodeResult").innerHTML = `
-          <div class="panel bad">
-            <strong>CSR decode failed</strong>
-            ${e.message || "Unable to parse the CSR."}
-          </div>
-        `;
-      }
-    } else {
-      byId("csrDecodeResult").innerHTML = "";
-    }
-
-    if (certPem) {
-      try {
-        const decodedCert = parseCert(certPem);
-        renderDecodedCert(decodedCert);
-      } catch (e) {
-        byId("certDecodeResult").innerHTML = `
-          <div class="panel bad">
-            <strong>Certificate decode failed</strong>
-            ${e.message || "Unable to parse the certificate."}
-          </div>
-        `;
-      }
-    } else {
-      byId("certDecodeResult").innerHTML = "";
-    }
-
-    showTab("tab-decoder");
-  }
-
-  function clearDecoder(){
-    byId("csrFile").value = "";
-    byId("certFile").value = "";
-    byId("csrPem").value = "";
-    byId("certPem").value = "";
-    byId("csrDecodeResult").innerHTML = "";
-    byId("certDecodeResult").innerHTML = "";
-  }
-
   function getActiveOutputArea(){
     if (byId("out-linux").classList.contains("active")) return byId("outputLinux");
     if (byId("out-ps").classList.contains("active")) return byId("outputPS");
@@ -2409,14 +2312,622 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     lastDownloads.forEach(file => downloadText(file.filename, file.content));
   }
 
+  /* Decoder functionality */
+  const pemInput = byId("pemInput");
+  const fileInput = byId("fileInput");
+  const decodeBtn = byId("decodeBtn");
+  const loadFileBtn = byId("loadFileBtn");
+  const loadExampleCsrBtn = byId("loadExampleCsrBtn");
+  const loadExampleCertBtn = byId("loadExampleCertBtn");
+  const clearBtn = byId("clearBtn");
+  const errorBox = byId("errorBox");
+  const results = byId("results");
+
+  function showDecoderError(msg){
+    errorBox.style.display = "block";
+    errorBox.textContent = msg;
+  }
+
+  function hideDecoderError(){
+    errorBox.style.display = "none";
+    errorBox.textContent = "";
+  }
+
+  function updateDecoderClearButton(){
+    clearBtn.style.display = pemInput.value.trim() ? "inline-block" : "none";
+  }
+
+  function formatDateUTC(date){
+    if (!date) return "N/A";
+    const iso = new Date(date).toISOString().replace("T"," ").replace(".000Z"," UTC");
+    return iso;
+  }
+
+  function daysRemaining(date){
+    if (!date) return null;
+    const now = new Date();
+    const diff = new Date(date).getTime() - now.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }
+
+  function decoderValidityBadge(notAfter){
+    const days = daysRemaining(notAfter);
+    if (days === null) return '<span class="decoder-badge decoder-badge-expired">❌ Unknown</span>';
+    if (days < 0) return `<span class="decoder-badge decoder-badge-expired">❌ Expired</span>`;
+    if (days < 30) return `<span class="decoder-badge decoder-badge-soon">⚠️ Expiring Soon (${days} days)</span>`;
+    return `<span class="decoder-badge decoder-badge-valid">✅ Valid (${days} days remaining)</span>`;
+  }
+
+  function wrapPem(label, bytes){
+    const b64 = forge.util.encode64(bytes);
+    const lines = b64.match(/.{1,64}/g) || [];
+    return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----`;
+  }
+
+  async function readFileToPem(file){
+    const buffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const text = new TextDecoder().decode(bytes).trim();
+
+    if (text.includes("-----BEGIN")) return text;
+
+    const binary = Array.from(bytes).map(b => String.fromCharCode(b)).join("");
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+
+    if (ext === "cer" || ext === "crt" || ext === "der") {
+      return wrapPem("CERTIFICATE", binary);
+    }
+
+    if (ext === "csr" || ext === "req") {
+      return wrapPem("CERTIFICATE REQUEST", binary);
+    }
+
+    return text;
+  }
+
+  function normalisePem(pem){
+    return String(pem || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .trim();
+  }
+
+  function detectPemType(pem){
+    if (pem.includes("-----BEGIN CERTIFICATE REQUEST-----") || pem.includes("-----BEGIN NEW CERTIFICATE REQUEST-----")) return "csr";
+    if (pem.includes("-----BEGIN CERTIFICATE-----")) return "cert";
+    return "unknown";
+  }
+
+  function oidLabel(oid){
+    const map = {
+      "1.2.840.113549.1.1.5": "sha1WithRSAEncryption",
+      "1.2.840.113549.1.1.11": "sha256WithRSAEncryption",
+      "1.2.840.113549.1.1.12": "sha384WithRSAEncryption",
+      "1.2.840.113549.1.1.13": "sha512WithRSAEncryption",
+      "1.2.840.10045.4.3.2": "ecdsa-with-SHA256",
+      "1.2.840.10045.4.3.3": "ecdsa-with-SHA384",
+      "1.2.840.10045.4.3.4": "ecdsa-with-SHA512"
+    };
+    return map[oid] || oid || "Unknown";
+  }
+
+  function attrsToMap(attrs){
+    const out = {};
+    (attrs || []).forEach(a => {
+      const key = a.shortName || a.name || a.type;
+      out[key] = a.value;
+    });
+    return out;
+  }
+
+  function publicKeyInfo(key){
+    if (!key) return { algorithm:"Unknown", size:"Unknown", modulusHex:"" };
+
+    if (key.n && key.e) {
+      return {
+        algorithm: "RSA",
+        size: `${key.n.bitLength()}-bit`,
+        modulusHex: forge.util.bytesToHex(
+          key.n.toByteArray()
+            .map(v => (v < 0 ? v + 256 : v))
+            .map(v => String.fromCharCode(v))
+            .join("")
+        )
+      };
+    }
+
+    if (key.Q) {
+      let bits = "Unknown";
+      if (key.Q && key.Q.x) {
+        try {
+          bits = `${key.Q.x.bitLength() * 2}-bit`;
+        } catch (e) {}
+      }
+      return {
+        algorithm: "EC",
+        size: bits,
+        modulusHex: ""
+      };
+    }
+
+    return { algorithm:"Unknown", size:"Unknown", modulusHex:"" };
+  }
+
+  function getExt(exts, name){
+    return (exts || []).find(e => e.name === name);
+  }
+
+  function formatHexColon(hex){
+    if (!hex) return "N/A";
+    return hex.toUpperCase().match(/.{1,2}/g).join(":");
+  }
+
+  function sha1FingerprintFromPem(pem){
+    const msg = forge.md.sha1.create();
+    msg.update(forge.pem.decode(pem)[0].body);
+    return formatHexColon(msg.digest().toHex());
+  }
+
+  function sha256FingerprintFromPem(pem){
+    const msg = forge.md.sha256.create();
+    msg.update(forge.pem.decode(pem)[0].body);
+    return formatHexColon(msg.digest().toHex());
+  }
+
+  function copyText(text){
+    navigator.clipboard.writeText(String(text || "")).catch(() => {});
+  }
+
+  function decoderKv(label, value, copyable=false){
+    const safeValue = value === undefined || value === null || value === "" ? "N/A" : value;
+    return `
+      <div class="decoder-kv">
+        <div class="decoder-kv-label">${label}</div>
+        <div class="decoder-value-row">
+          <div class="decoder-kv-value">${safeValue}</div>
+          ${copyable ? `<button class="decoder-copy-btn" data-copy="${String(safeValue).replace(/"/g, '&quot;')}">Copy</button>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  function decoderKvCode(label, value, copyable=false){
+    const safeValue = value === undefined || value === null || value === "" ? "N/A" : value;
+    return `
+      <div class="decoder-kv">
+        <div class="decoder-kv-label">${label}</div>
+        <div class="decoder-value-row">
+          <div class="decoder-kv-value"><code>${safeValue}</code></div>
+          ${copyable ? `<button class="decoder-copy-btn" data-copy="${String(safeValue).replace(/"/g, '&quot;')}">Copy</button>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  function decoderLongValueSection(title, value){
+    if (!value) return "";
+    return `
+      <div class="decoder-kv">
+        <div class="decoder-kv-label">${title}</div>
+        <details class="decoder-long">
+          <summary>Show value</summary>
+          <pre class="decoder-raw">${value}</pre>
+        </details>
+      </div>
+    `;
+  }
+
+  function decoderSection(title, bodyHtml, collapsed=false){
+    return `
+      <div class="decoder-section ${collapsed ? "collapsed" : ""}">
+        <button class="decoder-section-head" type="button">
+          <span>${title}</span>
+          <span>${collapsed ? "+" : "−"}</span>
+        </button>
+        <div class="decoder-section-body">${bodyHtml}</div>
+      </div>
+    `;
+  }
+
+  function renderSubjectSection(map, title){
+    return decoderSection(title, `
+      <div class="decoder-kv-grid">
+        ${decoderKv("CN", map.CN)}
+        ${decoderKv("O", map.O)}
+        ${decoderKv("OU", map.OU)}
+        ${decoderKv("L", map.L)}
+        ${decoderKv("ST", map.ST)}
+        ${decoderKv("C", map.C)}
+        ${decoderKv("emailAddress", map.emailAddress || map.E)}
+      </div>
+    `);
+  }
+
+  function renderGeneralSectionForCert(cert, pem){
+    const subject = attrsToMap(cert.subject.attributes);
+    const remaining = daysRemaining(cert.validity.notAfter);
+    const validity = remaining === null
+      ? "Unknown"
+      : remaining < 0
+        ? `${remaining} days`
+        : `${remaining} days`;
+
+    return decoderSection("General", `
+      <div class="decoder-kv-grid">
+        ${decoderKv("Type", "X.509 Certificate")}
+        ${decoderKv("Subject CN", subject.CN)}
+        ${decoderKv("Valid From", formatDateUTC(cert.validity.notBefore))}
+        ${decoderKv("Valid To", formatDateUTC(cert.validity.notAfter))}
+        ${decoderKv("Days Remaining", validity, true)}
+        <div class="decoder-kv">
+          <div class="decoder-kv-label">Validity</div>
+          <div class="decoder-kv-value">${decoderValidityBadge(cert.validity.notAfter)}</div>
+        </div>
+        ${decoderKvCode("Serial Number", formatHexColon(cert.serialNumber), true)}
+        ${decoderKv("Version", `v${(cert.version || 2) + 1}`)}
+      </div>
+    `);
+  }
+
+  function renderPublicKeySection(keyInfo){
+    return decoderSection("Public Key", `
+      <div class="decoder-kv-grid">
+        ${decoderKv("Algorithm", keyInfo.algorithm)}
+        ${decoderKv("Key Size", keyInfo.size)}
+        ${decoderLongValueSection("Modulus / Public Key Hex", keyInfo.modulusHex)}
+      </div>
+    `);
+  }
+
+  function renderSANSection(sans){
+    const items = sans && sans.length ? sans.map(x => `<li>${x}</li>`).join("") : "<li>N/A</li>";
+    const joined = sans && sans.length ? sans.join(", ") : "N/A";
+    return decoderSection("Subject Alternative Names (SANs)", `
+      <div class="decoder-kv-grid">
+        <div class="decoder-kv">
+          <div class="decoder-kv-label">Entries</div>
+          <div class="decoder-value-row">
+            <div class="decoder-kv-value">
+              <ul class="decoder-list">${items}</ul>
+            </div>
+            <button class="decoder-copy-btn" data-copy="${joined.replace(/"/g, '&quot;')}">Copy</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  function renderExtensionsSection(exts){
+    const keyUsage = getExt(exts, "keyUsage");
+    const eku = getExt(exts, "extKeyUsage");
+    const bc = getExt(exts, "basicConstraints");
+    const crl = getExt(exts, "cRLDistributionPoints");
+    const aia = getExt(exts, "authorityInfoAccess");
+    const policies = getExt(exts, "certificatePolicies");
+    const ski = getExt(exts, "subjectKeyIdentifier");
+    const aki = getExt(exts, "authorityKeyIdentifier");
+
+    const keyUsageList = [];
+    if (keyUsage) {
+      if (keyUsage.digitalSignature) keyUsageList.push("Digital Signature");
+      if (keyUsage.nonRepudiation) keyUsageList.push("Non Repudiation");
+      if (keyUsage.keyEncipherment) keyUsageList.push("Key Encipherment");
+      if (keyUsage.dataEncipherment) keyUsageList.push("Data Encipherment");
+      if (keyUsage.keyAgreement) keyUsageList.push("Key Agreement");
+      if (keyUsage.keyCertSign) keyUsageList.push("Key Cert Sign");
+      if (keyUsage.cRLSign) keyUsageList.push("CRL Sign");
+    }
+
+    const ekuList = [];
+    if (eku) {
+      if (eku.serverAuth) ekuList.push("Server Authentication");
+      if (eku.clientAuth) ekuList.push("Client Authentication");
+      if (eku.codeSigning) ekuList.push("Code Signing");
+      if (eku.emailProtection) ekuList.push("Email Protection");
+      if (eku.timeStamping) ekuList.push("Time Stamping");
+      if (eku.ocspSigning) ekuList.push("OCSP Signing");
+    }
+
+    return decoderSection("Extensions", `
+      <div class="decoder-kv-grid">
+        ${decoderKv("Key Usage", keyUsageList.length ? keyUsageList.join(", ") : "N/A", true)}
+        ${decoderKv("Extended Key Usage", ekuList.length ? ekuList.join(", ") : "N/A", true)}
+        ${decoderKv("Basic Constraints", bc ? `isCA=${!!bc.cA}${bc.pathLenConstraint !== undefined ? `, pathLen=${bc.pathLenConstraint}` : ""}` : "N/A")}
+        ${decoderKv("CRL Distribution Points", crl ? JSON.stringify(crl) : "N/A")}
+        ${decoderKv("Authority Info Access", aia ? JSON.stringify(aia) : "N/A")}
+        ${decoderKv("Certificate Policies", policies ? JSON.stringify(policies) : "N/A")}
+        ${decoderKv("Subject Key Identifier", ski && ski.subjectKeyIdentifier ? ski.subjectKeyIdentifier : "N/A", true)}
+        ${decoderKv("Authority Key Identifier", aki && aki.keyIdentifier ? aki.keyIdentifier : "N/A", true)}
+      </div>
+    `, true);
+  }
+
+  function renderFingerprintSection(pem){
+    const sha256 = sha256FingerprintFromPem(pem);
+    const sha1 = sha1FingerprintFromPem(pem);
+    return decoderSection("Fingerprints", `
+      <div class="decoder-kv-grid">
+        ${decoderKvCode("SHA-256 Fingerprint", sha256, true)}
+        ${decoderKvCode("SHA-1 Fingerprint", sha1, true)}
+      </div>
+    `);
+  }
+
+  function renderCsrSignatureSection(csr){
+    let verified = false;
+    try {
+      verified = csr.verify();
+    } catch (e) {
+      verified = false;
+    }
+
+    return decoderSection("Signature", `
+      <div class="decoder-kv-grid">
+        ${decoderKv("Algorithm", oidLabel(csr.signatureOid))}
+        <div class="decoder-kv">
+          <div class="decoder-kv-label">Signature valid</div>
+          <div class="decoder-kv-value">${verified ? '<span class="decoder-badge decoder-badge-valid">✅ Valid</span>' : '<span class="decoder-badge decoder-badge-expired">❌ Invalid</span>'}</div>
+        </div>
+      </div>
+    `);
+  }
+
+  function renderRequestedExtensions(csr){
+    let sans = [];
+    let keyUsageText = "N/A";
+
+    const extReq = csr.getAttribute({ name: "extensionRequest" });
+    if (extReq && extReq.extensions) {
+      const sanExt = getExt(extReq.extensions, "subjectAltName");
+      if (sanExt && sanExt.altNames) {
+        sans = sanExt.altNames.map(a => {
+          if (a.type === 2) return a.value;
+          if (a.type === 7) return a.ip || a.value;
+          if (a.type === 1) return a.value;
+          return a.value || JSON.stringify(a);
+        });
+      }
+
+      const ku = getExt(extReq.extensions, "keyUsage");
+      if (ku) {
+        const list = [];
+        if (ku.digitalSignature) list.push("Digital Signature");
+        if (ku.nonRepudiation) list.push("Non Repudiation");
+        if (ku.keyEncipherment) list.push("Key Encipherment");
+        if (ku.dataEncipherment) list.push("Data Encipherment");
+        if (ku.keyAgreement) list.push("Key Agreement");
+        if (ku.keyCertSign) list.push("Key Cert Sign");
+        if (ku.cRLSign) list.push("CRL Sign");
+        keyUsageText = list.length ? list.join(", ") : "N/A";
+      }
+    }
+
+    const items = sans.length ? sans.map(x => `<li>${x}</li>`).join("") : "<li>N/A</li>";
+    const joined = sans.length ? sans.join(", ") : "N/A";
+
+    return decoderSection("Requested Extensions", `
+      <div class="decoder-kv-grid">
+        <div class="decoder-kv">
+          <div class="decoder-kv-label">SANs (DNS names, IPs, emails)</div>
+          <div class="decoder-value-row">
+            <div class="decoder-kv-value"><ul class="decoder-list">${items}</ul></div>
+            <button class="decoder-copy-btn" data-copy="${joined.replace(/"/g, '&quot;')}">Copy</button>
+          </div>
+        </div>
+        ${decoderKv("Key Usage", keyUsageText, true)}
+      </div>
+    `);
+  }
+
+  function renderCertificate(pem){
+    const cert = forge.pki.certificateFromPem(pem);
+    const subject = attrsToMap(cert.subject.attributes);
+    const issuer = attrsToMap(cert.issuer.attributes);
+    const keyInfo = publicKeyInfo(cert.publicKey);
+
+    const sanExt = getExt(cert.extensions || [], "subjectAltName");
+    const sans = sanExt && sanExt.altNames
+      ? sanExt.altNames.map(a => {
+          if (a.type === 2) return a.value;
+          if (a.type === 7) return a.ip || a.value;
+          if (a.type === 1) return a.value;
+          return a.value || JSON.stringify(a);
+        })
+      : [];
+
+    results.innerHTML = `
+      <div class="decoder-card">
+        <h2 style="margin:0 0 8px 0;">Decoded Certificate</h2>
+        <div class="decoder-meta">
+          <span class="decoder-chip">X.509 Certificate</span>
+          ${decoderValidityBadge(cert.validity.notAfter)}
+        </div>
+
+        ${renderGeneralSectionForCert(cert, pem)}
+        ${renderSubjectSection(subject, "Subject")}
+        ${renderSubjectSection(issuer, "Issuer")}
+        ${renderPublicKeySection(keyInfo)}
+        ${renderSANSection(sans)}
+        ${renderExtensionsSection(cert.extensions || [])}
+        ${renderFingerprintSection(pem)}
+      </div>
+    `;
+    attachDecoderCopyAndCollapse();
+  }
+
+  function renderCSR(pem){
+    const csr = forge.pki.certificationRequestFromPem(pem);
+    const subject = attrsToMap(csr.subject.attributes);
+    const keyInfo = publicKeyInfo(csr.publicKey);
+
+    results.innerHTML = `
+      <div class="decoder-card">
+        <h2 style="margin:0 0 8px 0;">Decoded CSR</h2>
+        <div class="decoder-meta">
+          <span class="decoder-chip">Certificate Signing Request</span>
+        </div>
+
+        ${renderSubjectSection(subject, "Subject")}
+        ${renderPublicKeySection(keyInfo)}
+        ${renderRequestedExtensions(csr)}
+        ${renderCsrSignatureSection(csr)}
+      </div>
+    `;
+    attachDecoderCopyAndCollapse();
+  }
+
+  function attachDecoderCopyAndCollapse(){
+    document.querySelectorAll(".decoder-copy-btn").forEach(btn => {
+      btn.onclick = () => copyText(btn.getAttribute("data-copy"));
+    });
+
+    document.querySelectorAll(".decoder-section-head").forEach(btn => {
+      btn.onclick = () => {
+        const section = btn.closest(".decoder-section");
+        section.classList.toggle("collapsed");
+        btn.querySelector("span:last-child").textContent = section.classList.contains("collapsed") ? "+" : "−";
+      };
+    });
+  }
+
+  function decodeInput(){
+    hideDecoderError();
+    results.style.display = "none";
+    results.innerHTML = "";
+
+    const pem = normalisePem(pemInput.value);
+    if (!pem) {
+      showDecoderError("Could not decode input. Please check that it is a valid PEM-encoded CSR or Certificate.");
+      return;
+    }
+
+    const type = detectPemType(pem);
+
+    try {
+      if (type === "cert") {
+        renderCertificate(pem);
+      } else if (type === "csr") {
+        renderCSR(pem);
+      } else {
+        throw new Error("Unknown PEM type");
+      }
+      results.style.display = "block";
+    } catch (e) {
+      showDecoderError("Could not decode input. Please check that it is a valid PEM-encoded CSR or Certificate.");
+    }
+  }
+
+  async function loadFromFile(file){
+    hideDecoderError();
+    try {
+      const pem = await readFileToPem(file);
+      pemInput.value = normalisePem(pem);
+      updateDecoderClearButton();
+    } catch (e) {
+      showDecoderError("Could not decode input. Please check that it is a valid PEM-encoded CSR or Certificate.");
+    }
+  }
+
+  function generateExampleCSR(){
+    const keys = forge.pki.rsa.generateKeyPair(2048);
+    const csr = forge.pki.createCertificationRequest();
+    csr.publicKey = keys.publicKey;
+    csr.setSubject([
+      { name: "commonName", value: "www.example.com" },
+      { name: "organizationName", value: "Example Corp" },
+      { name: "organizationalUnitName", value: "IT Security" },
+      { name: "localityName", value: "Kuala Lumpur" },
+      { name: "stateOrProvinceName", value: "WP Kuala Lumpur" },
+      { name: "countryName", value: "MY" },
+      { name: "emailAddress", value: "admin@example.com" }
+    ]);
+
+    csr.setAttributes([{
+      name: "extensionRequest",
+      extensions: [
+        {
+          name: "subjectAltName",
+          altNames: [
+            { type: 2, value: "www.example.com" },
+            { type: 2, value: "example.com" },
+            { type: 2, value: "portal.example.com" }
+          ]
+        },
+        {
+          name: "keyUsage",
+          digitalSignature: true,
+          keyEncipherment: true
+        }
+      ]
+    }]);
+
+    csr.sign(keys.privateKey, forge.md.sha256.create());
+    return forge.pki.certificationRequestToPem(csr);
+  }
+
+  function generateExampleCertificate(){
+    const keys = forge.pki.rsa.generateKeyPair(2048);
+    const cert = forge.pki.createCertificate();
+    cert.publicKey = keys.publicKey;
+    cert.serialNumber = "01a2b3c4d5e6";
+    cert.validity.notBefore = new Date();
+    cert.validity.notAfter = new Date();
+    cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
+
+    const attrs = [
+      { name: "commonName", value: "www.example.com" },
+      { name: "organizationName", value: "Example Corp" },
+      { name: "organizationalUnitName", value: "IT Security" },
+      { name: "localityName", value: "Kuala Lumpur" },
+      { name: "stateOrProvinceName", value: "WP Kuala Lumpur" },
+      { name: "countryName", value: "MY" },
+      { name: "emailAddress", value: "admin@example.com" }
+    ];
+
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
+    cert.setExtensions([
+      {
+        name: "basicConstraints",
+        cA: false
+      },
+      {
+        name: "keyUsage",
+        digitalSignature: true,
+        keyEncipherment: true
+      },
+      {
+        name: "extKeyUsage",
+        serverAuth: true,
+        clientAuth: true
+      },
+      {
+        name: "subjectAltName",
+        altNames: [
+          { type: 2, value: "www.example.com" },
+          { type: 2, value: "example.com" },
+          { type: 2, value: "portal.example.com" }
+        ]
+      },
+      {
+        name: "subjectKeyIdentifier"
+      }
+    ]);
+
+    cert.sign(keys.privateKey, forge.md.sha256.create());
+    return forge.pki.certificateToPem(cert);
+  }
+
   function resetAll(){
     [
       "osVersion","iisVersion","nginxVersion","apacheVersion","xamppVersion","phpVersion",
       "opensslVersion","opensshVersion","cn","san","org","ou","city","state","country","email",
-      "outputLinux","outputPS","outputGUI","csrPem","certPem","csrFile","certFile"
+      "outputLinux","outputPS","outputGUI","pemInput"
     ].forEach(id => {
       if (byId(id)) byId(id).value = "";
     });
+
+    if (fileInput) fileInput.value = "";
 
     byId("resultArea").innerHTML = "";
     byId("readinessSummary").style.display = "none";
@@ -2431,8 +2942,9 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     byId("checkCertChain").innerHTML = "";
     byId("checkServiceSpecific").innerHTML = "";
     byId("checkCloseOut").innerHTML = "";
-    byId("csrDecodeResult").innerHTML = "";
-    byId("certDecodeResult").innerHTML = "";
+    results.innerHTML = "";
+    results.style.display = "none";
+    hideDecoderError();
 
     lastDownloads = [];
     lastAssessment = null;
@@ -2450,7 +2962,7 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
       if (marker) marker.textContent = "+";
     });
 
-    ["colReadiness", "colDetails", "colDecoderCSR", "colPostDeploy"].forEach(id => {
+    ["colReadiness", "colDetails", "colPostDeploy"].forEach(id => {
       const el = byId(id);
       if (el) {
         el.classList.add("open");
@@ -2462,14 +2974,46 @@ If SAN must be carried in the request itself, PowerShell + certreq is usually th
     onPlatformChange();
     syncOutputTabs();
     showTab("tab-env");
+    updateDecoderClearButton();
   }
+
+  decodeBtn.addEventListener("click", decodeInput);
+  loadFileBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    await loadFromFile(file);
+  });
+
+  loadExampleCsrBtn.addEventListener("click", () => {
+    pemInput.value = generateExampleCSR();
+    updateDecoderClearButton();
+    hideDecoderError();
+  });
+
+  loadExampleCertBtn.addEventListener("click", () => {
+    pemInput.value = generateExampleCertificate();
+    updateDecoderClearButton();
+    hideDecoderError();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    pemInput.value = "";
+    fileInput.value = "";
+    results.innerHTML = "";
+    results.style.display = "none";
+    hideDecoderError();
+    updateDecoderClearButton();
+  });
+
+  pemInput.addEventListener("input", updateDecoderClearButton);
 
   onPlatformChange();
   syncOutputTabs();
-  attachDropZone("csrDropZone", "csrPem", "csr");
-  attachDropZone("certDropZone", "certPem", "cert");
+  updateDecoderClearButton();
 
-  ["colReadiness", "colDetails", "colDecoderCSR", "colPostDeploy"].forEach(id => {
+  ["colReadiness", "colDetails", "colPostDeploy"].forEach(id => {
     const el = byId(id);
     if (el) {
       el.classList.add("open");
