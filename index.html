@@ -1241,7 +1241,7 @@ async function readFileToPem(file){
   const binary = uint8ToBinaryString(bytes);
   if (ext === 'csr' || ext === 'req' || ext === 'der') {
     const pem = wrapPem('CERTIFICATE REQUEST', binary);
-    try { KJUR.asn1.csr.CSRUtil.getParam(pem, true); }
+    try { KJUR.asn1.csr.CSRUtil.getParam(pem); }
     catch (e) { throw new Error('Unsupported or unreadable CSR file'); }
     return pem;
   }
@@ -1390,7 +1390,7 @@ function renderPolicySection(policyChecks){
 }
 
 function renderCSR(pem){
-  const info = KJUR.asn1.csr.CSRUtil.getParam(pem, true);
+  const info = KJUR.asn1.csr.CSRUtil.getParam(pem);
   const csrHex = b64tohex(pemtoB64(pem));
   const subject = info.subject?.str ? parseSubjectString(info.subject.str) : formatNameArray(info.subject?.array || []);
   const extReq = info.extreq || info.extReq || [];
