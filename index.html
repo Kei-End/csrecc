@@ -1211,7 +1211,11 @@ function showDecoderError(msg){ errorBox.style.display = 'block'; errorBox.textC
 function hideDecoderError(){ errorBox.style.display = 'none'; errorBox.textContent = ''; }
 function updateDecoderClearButton(){ byId('clearBtn').style.display = pemInput.value.trim() ? 'inline-block' : 'none'; }
 
-function normalisePem(pem){ return String(pem || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim(); }
+function normalisePem(pem){ return String(pem || '').replace(/
+/g, '
+').replace(/
+/g, '
+').trim(); }
 function detectPemType(pem){
   if (pem.includes('-----BEGIN CERTIFICATE REQUEST-----') || pem.includes('-----BEGIN NEW CERTIFICATE REQUEST-----')) return 'csr';
   if (pem.includes('-----BEGIN CERTIFICATE-----')) return 'cert';
@@ -1228,7 +1232,10 @@ function uint8ToBinaryString(bytes){
 function wrapPem(label, bytesBinary){
   const b64 = forge.util.encode64(bytesBinary);
   const lines = b64.match(/.{1,64}/g) || [];
-  return `-----BEGIN ${label}-----\n${lines.join('\n')}\n-----END ${label}-----`;
+  return `-----BEGIN ${label}-----
+${lines.join('
+')}
+-----END ${label}-----`;
 }
 
 async function readFileToPem(file){
@@ -1239,12 +1246,7 @@ async function readFileToPem(file){
   if (text.includes('-----BEGIN')) return text;
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   const binary = uint8ToBinaryString(bytes);
-  if (ext === 'csr' || ext === 'req' || ext === 'der') {
-    const pem = wrapPem('CERTIFICATE REQUEST', binary);
-    try { KJUR.asn1.csr.CSRUtil.getParam(pem); }
-    catch (e) { throw new Error('Unsupported or unreadable CSR file'); }
-    return pem;
-  }
+  if (ext === 'csr' || ext === 'req' || ext === 'der') return wrapPem('CERTIFICATE REQUEST', binary);
   if (text) return text;
   throw new Error('Unsupported or unreadable CSR file');
 }
@@ -1302,17 +1304,7 @@ function decoderSection(title, bodyHtml, collapsed=false){
     </div>`;
 }
 
-function formatNameArray(arr){
-  const out = {};
-  (arr || []).forEach(o => { if (o && o.type) out[o.type] = o.value; });
-  return out;
-}
-
-function formatHexColon(hex){
-  if (!hex) return 'N/A';
-  const clean = String(hex).replace(/[^a-fA-F0-9]/g, '').toUpperCase();
-  return clean.match(/.{1,2}/g)?.join(':') || clean;
-}
+function getDNValue(subject, type){ return subject[type] || 'N/A'; }
 
 function oidLabel(oid){
   const map = {
@@ -1320,108 +1312,219 @@ function oidLabel(oid){
     '1.2.840.10045.4.3.2': 'ecdsa-with-SHA256',
     '1.2.840.10045.4.3.3': 'ecdsa-with-SHA384',
     '1.2.840.10045.4.3.4': 'ecdsa-with-SHA512',
-    '1.2.840.10045.2.1': 'ecPublicKey',
-    '1.3.132.0.34': 'secp384r1'
+    '1.2.840.10045.2.1': 'id-ecPublicKey',
+    '1.3.132.0.34': 'secp384r1',
+    '2.5.4.3': 'CN',
+    '2.5.4.6': 'C',
+    '2.5.4.7': 'L',
+    '2.5.4.8': 'ST',
+    '2.5.4.10': 'O',
+    '2.5.4.11': 'OU',
+    '1.2.840.113549.1.9.1': 'emailAddress',
+    '1.2.840.113549.1.9.14': 'extensionRequest',
+    '2.5.29.17': 'subjectAltName',
+    '2.5.29.15': 'keyUsage'
   };
   return map[oid] || oid || 'Unknown';
 }
 
-function curveNameFromKeyHex(pubkeyHex){
-  try {
-    const keyObj = KEYUTIL.getKey({xy: pubkeyHex, curve: 'secp384r1', kty: 'EC'});
-    if (keyObj && keyObj.curveName) return keyObj.curveName;
-  } catch (e) {}
-  if (pubkeyHex && pubkeyHex.length === 194) return 'secp384r1';
-  if (pubkeyHex && pubkeyHex.length === 130) return 'prime256v1';
-  return 'Unknown';
+function bytesFromPem(pem){
+  const clean = normalisePem(pem);
+  const b64 = clean.replace(/-----BEGIN [^-]+-----/g, '').replace(/-----END [^-]+-----/g, '').replace(/\s+/g, '');
+  if (!b64) throw new Error('Empty PEM body');
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
 }
 
-function getDNValue(subject, type){ return subject[type] || 'N/A'; }
+function bytesToHex(bytes){ return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(''); }
 
-function parseSubjectString(str){
+function decodeOid(bytes){
+  if (!bytes || !bytes.length) return '';
+  const first = bytes[0];
+  const parts = [Math.floor(first / 40), first % 40];
+  let value = 0;
+  for (let i = 1; i < bytes.length; i++) {
+    value = (value << 7) | (bytes[i] & 0x7f);
+    if (!(bytes[i] & 0x80)) {
+      parts.push(value);
+      value = 0;
+    }
+  }
+  return parts.join('.');
+}
+
+function decodeString(tag, bytes){
+  if (!bytes) return '';
+  if (tag === 0x1e) {
+    let out = '';
+    for (let i = 0; i + 1 < bytes.length; i += 2) out += String.fromCharCode((bytes[i] << 8) | bytes[i + 1]);
+    return out;
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function readAsn1(bytes, offset=0){
+  const tag = bytes[offset];
+  let lenByte = bytes[offset + 1];
+  let length = 0;
+  let header = 2;
+  if (lenByte < 0x80) {
+    length = lenByte;
+  } else {
+    const n = lenByte & 0x7f;
+    header = 2 + n;
+    for (let i = 0; i < n; i++) length = (length << 8) | bytes[offset + 2 + i];
+  }
+  const start = offset + header;
+  const end = start + length;
+  const node = { tag, length, header, start, end, bytes: bytes.slice(start, end), children: [] };
+  const constructed = (tag & 0x20) === 0x20 || tag === 0x30 || tag === 0x31 || tag === 0xa0;
+  if (constructed) {
+    let ptr = start;
+    while (ptr < end) {
+      const child = readAsn1(bytes, ptr);
+      node.children.push(child);
+      ptr = child.end;
+    }
+  }
+  return node;
+}
+
+function parseName(node){
   const out = {};
-  String(str || '').split('/').filter(Boolean).forEach(part => {
-    const idx = part.indexOf('=');
-    if (idx > 0) out[part.slice(0, idx)] = part.slice(idx + 1);
+  (node.children || []).forEach(setNode => {
+    (setNode.children || []).forEach(seqNode => {
+      const oidNode = seqNode.children?.[0];
+      const valNode = seqNode.children?.[1];
+      if (!oidNode || !valNode) return;
+      const oid = decodeOid(oidNode.bytes);
+      const short = oidLabel(oid);
+      out[short] = decodeString(valNode.tag, valNode.bytes);
+    });
   });
   return out;
 }
 
-function detectCurveFromHex(hex){
-  const clean = String(hex || '').toLowerCase();
-  if (clean.includes('06052b81040022')) return 'secp384r1';
-  if (clean.includes('06082a8648ce3d030107')) return 'prime256v1';
-  if (clean.includes('06052b81040023')) return 'secp521r1';
-  return 'Unknown';
+function parseGeneralNames(bytes){
+  const root = readAsn1(bytes, 0);
+  const out = [];
+  (root.children || []).forEach(child => {
+    const tag = child.tag;
+    const val = decodeString(0x16, child.bytes);
+    if (tag === 0x82) out.push(`DNS:${val}`);
+    else if (tag === 0x87) out.push(`IP:${Array.from(child.bytes).join('.')}`);
+    else if (tag === 0x81) out.push(`email:${val}`);
+  });
+  return out;
 }
 
-function detectPublicKeyHexFromCsrHex(hex){
-  const clean = String(hex || '').toLowerCase();
-  const marker = '06072a8648ce3d0201';
-  const idx = clean.indexOf(marker);
-  if (idx === -1) return '';
-  const bitString = clean.indexOf('03', idx);
-  if (bitString === -1) return '';
-  return clean.slice(bitString);
+function parseKeyUsage(bytes){
+  const bitString = readAsn1(bytes, 0);
+  const data = bitString.bytes;
+  if (!data.length) return [];
+  const unused = data[0];
+  const bits = [];
+  for (let i = 1; i < data.length; i++) {
+    for (let bit = 7; bit >= 0; bit--) bits.push((data[i] >> bit) & 1);
+  }
+  if (unused) bits.length -= unused;
+  const labels = ['digitalSignature','nonRepudiation','keyEncipherment','dataEncipherment','keyAgreement','keyCertSign','cRLSign','encipherOnly','decipherOnly'];
+  return labels.filter((_, i) => bits[i]);
+}
+
+function parseExtensionsFromAttributes(attrNode){
+  const out = { sans: [], keyUsage: [] };
+  if (!attrNode) return out;
+  (attrNode.children || []).forEach(attr => {
+    const oidNode = attr.children?.[0];
+    const valsNode = attr.children?.[1];
+    if (!oidNode || !valsNode) return;
+    const oid = decodeOid(oidNode.bytes);
+    if (oid !== '1.2.840.113549.1.9.14') return;
+    const extSeq = valsNode.children?.[0];
+    if (!extSeq) return;
+    (extSeq.children || []).forEach(ext => {
+      const extOidNode = ext.children?.[0];
+      let idx = 1;
+      if (!extOidNode) return;
+      const extOid = decodeOid(extOidNode.bytes);
+      if (ext.children?.[1]?.tag === 0x01) idx = 2;
+      const octetNode = ext.children?.[idx];
+      if (!octetNode) return;
+      if (extOid === '2.5.29.17') out.sans = parseGeneralNames(octetNode.bytes);
+      if (extOid === '2.5.29.15') out.keyUsage = parseKeyUsage(octetNode.bytes);
+    });
+  });
+  return out;
+}
+
+function parseCsr(pem){
+  const der = bytesFromPem(pem);
+  const root = readAsn1(der, 0);
+  if (root.tag !== 0x30 || root.children.length < 3) throw new Error('CSR root sequence is invalid');
+  const cri = root.children[0];
+  const sigAlg = root.children[1];
+  if (cri.tag !== 0x30 || cri.children.length < 4) throw new Error('CSR request info is invalid');
+  const subjectNode = cri.children[1];
+  const spkiNode = cri.children[2];
+  const attrsNode = cri.children[3];
+
+  const subject = parseName(subjectNode);
+  const algoSeq = spkiNode.children?.[0];
+  const pubBit = spkiNode.children?.[1];
+  const pubAlgoOid = algoSeq?.children?.[0] ? decodeOid(algoSeq.children[0].bytes) : '';
+  const curveOid = algoSeq?.children?.[1] ? decodeOid(algoSeq.children[1].bytes) : '';
+  const sigOid = sigAlg.children?.[0] ? decodeOid(sigAlg.children[0].bytes) : '';
+  const extensions = parseExtensionsFromAttributes(attrsNode);
+  const pubBits = pubBit?.bytes?.length ? pubBit.bytes.slice(1) : new Uint8Array();
+
+  let keySize = 'Unknown';
+  if (curveOid === '1.3.132.0.34') keySize = '384-bit';
+  else if (curveOid === '1.2.840.10045.3.1.7') keySize = '256-bit';
+  else if (curveOid === '1.3.132.0.35') keySize = '521-bit';
+
+  return {
+    der,
+    subject,
+    pubAlgoOid,
+    curveOid,
+    signatureOid: sigOid,
+    signatureAlgorithm: oidLabel(sigOid),
+    publicKeyAlgorithm: oidLabel(pubAlgoOid),
+    curveName: oidLabel(curveOid),
+    keySize,
+    sans: extensions.sans,
+    keyUsage: extensions.keyUsage,
+    pubHex: bytesToHex(pubBits),
+    sha256Fingerprint: formatHexColon(forge.md.sha256.create().update(uint8ToBinaryString(der)).digest().toHex())
+  };
 }
 
 function buildDecoderPolicy(csrInfo){
   const checks = [];
   const add = (item, detected, expected, ok, note='') => checks.push({item, detected, expected, ok, note});
-
-  const algo = csrInfo.pubkeyAlgorithm || 'Unknown';
-  add('Public key algorithm', algo, 'ECC', /^EC/i.test(algo), 'Only ECC CSRs are accepted in this decoder.');
-  add('Curve', csrInfo.curveName, 'secp384r1 / P-384', /secp384r1|P-384/i.test(csrInfo.curveName), 'The expected curve for this workflow is P-384.');
-  add('Signature algorithm', csrInfo.signatureAlgorithm, 'ECDSA with SHA-256 or SHA-384', /ecdsa/i.test(csrInfo.signatureAlgorithm), 'The CSR should be signed with ECDSA.');
+  add('Public key algorithm', csrInfo.publicKeyAlgorithm, 'ECC / id-ecPublicKey', /id-ecPublicKey|ec/i.test(csrInfo.publicKeyAlgorithm), 'Only ECC CSRs are accepted in this decoder.');
+  add('Curve', csrInfo.curveName, 'secp384r1 / P-384', /secp384r1/i.test(csrInfo.curveName), 'The expected curve for this workflow is P-384.');
+  add('Signature algorithm', csrInfo.signatureAlgorithm, 'ecdsa-with-SHA256 or ecdsa-with-SHA384', /ecdsa/i.test(csrInfo.signatureAlgorithm), 'The CSR should be signed with ECDSA.');
   add('SAN presence', csrInfo.sans.length ? `${csrInfo.sans.length} entry(ies)` : 'None', 'At least one SAN', csrInfo.sans.length > 0, 'Modern hostname validation expects SAN values.');
   return checks;
 }
 
 function renderPolicySection(policyChecks){
-  const grid = policyChecks.map(r => {
-    const badge = r.ok ? '<span class="decoder-badge decoder-badge-valid">✅ Pass</span>' : '<span class="decoder-badge decoder-badge-expired">❌ Fail</span>';
-    return `
+  const grid = policyChecks.map(r => `
       <div class="decoder-kv">
         <div class="decoder-kv-label">${escapeHtml(r.item)}</div>
-        <div class="decoder-kv-value">${badge}<div style="margin-top:8px;"><strong>Detected:</strong> ${escapeHtml(r.detected)}<br><strong>Expected:</strong> ${escapeHtml(r.expected)}${r.note ? `<div style="margin-top:6px;">${escapeHtml(r.note)}</div>` : ''}</div></div>
-      </div>`;
-  }).join('');
+        <div class="decoder-kv-value">${r.ok ? '<span class="decoder-badge decoder-badge-valid">✅ Pass</span>' : '<span class="decoder-badge decoder-badge-expired">❌ Fail</span>'}<div style="margin-top:8px;"><strong>Detected:</strong> ${escapeHtml(r.detected)}<br><strong>Expected:</strong> ${escapeHtml(r.expected)}${r.note ? `<div style="margin-top:6px;">${escapeHtml(r.note)}</div>` : ''}</div></div>
+      </div>`).join('');
   return decoderSection('ECC Policy Checks', `<div class="decoder-kv-grid">${grid}</div>`);
 }
 
 function renderCSR(pem){
-  const info = KJUR.asn1.csr.CSRUtil.getParam(pem);
-  const csrHex = b64tohex(pemtoB64(pem));
-  const subject = info.subject?.str ? parseSubjectString(info.subject.str) : formatNameArray(info.subject?.array || []);
-  const extReq = info.extreq || info.extReq || [];
-  const sans = [];
-  let keyUsage = [];
-
-  (extReq || []).forEach(ext => {
-    if (ext.extname === 'subjectAltName' && Array.isArray(ext.array)) {
-      ext.array.forEach(item => {
-        if (item.dns) sans.push(`DNS:${item.dns}`);
-        if (item.ip) sans.push(`IP:${item.ip}`);
-      });
-    }
-    if (ext.extname === 'keyUsage') {
-      Object.entries(ext).forEach(([k, v]) => {
-        if (k !== 'extname' && v === true) keyUsage.push(k);
-      });
-    }
-  });
-
-  const isEc = csrHex.toLowerCase().includes('06072a8648ce3d0201');
-  const curveName = detectCurveFromHex(csrHex);
-  const keyBits = curveName === 'secp384r1' ? '384-bit' : (curveName === 'prime256v1' ? '256-bit' : (curveName === 'secp521r1' ? '521-bit' : 'Unknown'));
-  const pubAlgo = isEc ? 'ECC' : 'Unknown';
-  const sigAlg = oidLabel(info.sigalg || info.sigalgfield || info.sigalgoid || 'Unknown');
-  let verified = false;
-  try { verified = KJUR.asn1.csr.CSRUtil.verifySignature(pem); } catch (e) { verified = false; }
-  const fpHex = KJUR.crypto.Util.hashHex(csrHex, 'sha256');
-  const pubHex = detectPublicKeyHexFromCsrHex(csrHex);
-  const policyChecks = buildDecoderPolicy({ pubkeyAlgorithm: pubAlgo, curveName, signatureAlgorithm: sigAlg, sans });
-
+  const csr = parseCsr(pem);
+  const policyChecks = buildDecoderPolicy(csr);
+  const isEc = /id-ecPublicKey|ec/i.test(csr.publicKeyAlgorithm);
   results.innerHTML = `
     <div class="decoder-card">
       <h2 style="margin:0 0 8px 0;">Decoded ECC CSR</h2>
@@ -1431,36 +1534,35 @@ function renderCSR(pem){
       </div>
       ${decoderSection('Subject', `
         <div class="decoder-kv-grid">
-          ${decoderKv('CN', getDNValue(subject, 'CN'))}
-          ${decoderKv('O', getDNValue(subject, 'O'))}
-          ${decoderKv('OU', getDNValue(subject, 'OU'))}
-          ${decoderKv('L', getDNValue(subject, 'L'))}
-          ${decoderKv('ST', getDNValue(subject, 'ST'))}
-          ${decoderKv('C', getDNValue(subject, 'C'))}
-          ${decoderKv('emailAddress', getDNValue(subject, 'E') !== 'N/A' ? getDNValue(subject, 'E') : getDNValue(subject, 'emailAddress'))}
+          ${decoderKv('CN', getDNValue(csr.subject, 'CN'))}
+          ${decoderKv('O', getDNValue(csr.subject, 'O'))}
+          ${decoderKv('OU', getDNValue(csr.subject, 'OU'))}
+          ${decoderKv('L', getDNValue(csr.subject, 'L'))}
+          ${decoderKv('ST', getDNValue(csr.subject, 'ST'))}
+          ${decoderKv('C', getDNValue(csr.subject, 'C'))}
+          ${decoderKv('emailAddress', getDNValue(csr.subject, 'emailAddress'))}
         </div>`)}
       ${decoderSection('Public Key', `
         <div class="decoder-kv-grid">
-          ${decoderKv('Algorithm', pubAlgo)}
-          ${decoderKv('Curve', curveName, true)}
-          ${decoderKv('Key Size', keyBits)}
-          ${decoderLongValueSection('Public Key Hex', pubHex)}
+          ${decoderKv('Algorithm', csr.publicKeyAlgorithm)}
+          ${decoderKv('Curve', csr.curveName, true)}
+          ${decoderKv('Key Size', csr.keySize)}
+          ${decoderLongValueSection('Public Key Hex', csr.pubHex)}
         </div>`)}
       ${decoderSection('Requested Extensions', `
         <div class="decoder-kv-grid">
-          ${decoderKvHtml('SANs', `<ul class="decoder-list">${(sans.length ? sans : ['N/A']).map(v => `<li>${escapeHtml(v)}</li>`).join('')}</ul>`)}
-          ${decoderKv('Key Usage', keyUsage.length ? keyUsage.join(', ') : 'N/A', true)}
+          ${decoderKvHtml('SANs', `<ul class="decoder-list">${(csr.sans.length ? csr.sans : ['N/A']).map(v => `<li>${escapeHtml(v)}</li>`).join('')}</ul>`)}
+          ${decoderKv('Key Usage', csr.keyUsage.length ? csr.keyUsage.join(', ') : 'N/A', true)}
         </div>`)}
       ${decoderSection('Signature', `
         <div class="decoder-kv-grid">
-          ${decoderKv('Signature Algorithm', sigAlg)}
-          ${decoderKvHtml('Signature Valid', verified ? '<span class="decoder-badge decoder-badge-valid">✅ Valid</span>' : '<span class="decoder-badge decoder-badge-expired">❌ Invalid</span>')}
-          ${decoderKvCode('SHA-256 Fingerprint', formatHexColon(fpHex), true)}
+          ${decoderKv('Signature Algorithm', csr.signatureAlgorithm)}
+          ${decoderKvHtml('Signature Status', '<span class="decoder-badge decoder-badge-soon">Parsed only</span>')}
+          ${decoderKvCode('SHA-256 Fingerprint', csr.sha256Fingerprint, true)}
         </div>`)}
       ${renderPolicySection(policyChecks)}
       ${decoderSection('Raw CSR', `<div class="decoder-kv-grid">${decoderLongValueSection('PEM', pem)}</div>`, true)}
     </div>`;
-
   attachDecoderBehaviours();
 }
 
@@ -1495,7 +1597,8 @@ function decodeInput(){
     renderCSR(pem);
     results.style.display = 'block';
   } catch (e) {
-    showDecoderError('Could not decode input. Please check that it is a valid ECC CSR.');
+    console.error('CSR decode error:', e);
+    showDecoderError(`Could not decode input. ${e.message || 'Please check that it is a valid ECC CSR.'}`);
   }
 }
 
@@ -1508,7 +1611,7 @@ async function loadFromFile(file){
     updateDecoderClearButton();
     showFlash('CSR file loaded.', 'ok');
   } catch (e) {
-    showDecoderError('Could not load file. Only PEM or DER CSR files are supported in this build.');
+    showDecoderError(`Could not load file. ${e.message || 'Only PEM or DER CSR files are supported in this build.'}`);
   }
 }
 
