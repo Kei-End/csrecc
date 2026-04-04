@@ -1240,13 +1240,10 @@ async function readFileToPem(file){
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   const binary = uint8ToBinaryString(bytes);
   if (ext === 'csr' || ext === 'req' || ext === 'der') {
-    try {
-      KJUR.asn1.csr.CSRUtil.getParam(binary); // quick probe; may throw
-    } catch (e) {
-      try { KJUR.asn1.csr.CSRUtil.getParam(wrapPem('CERTIFICATE REQUEST', binary)); }
-      catch (e2) { throw new Error('Unsupported or unreadable CSR file'); }
-    }
-    return wrapPem('CERTIFICATE REQUEST', binary);
+    const pem = wrapPem('CERTIFICATE REQUEST', binary);
+    try { KJUR.asn1.csr.CSRUtil.getParam(pem, true); }
+    catch (e) { throw new Error('Unsupported or unreadable CSR file'); }
+    return pem;
   }
   if (text) return text;
   throw new Error('Unsupported or unreadable CSR file');
@@ -1341,6 +1338,33 @@ function curveNameFromKeyHex(pubkeyHex){
 
 function getDNValue(subject, type){ return subject[type] || 'N/A'; }
 
+function parseSubjectString(str){
+  const out = {};
+  String(str || '').split('/').filter(Boolean).forEach(part => {
+    const idx = part.indexOf('=');
+    if (idx > 0) out[part.slice(0, idx)] = part.slice(idx + 1);
+  });
+  return out;
+}
+
+function detectCurveFromHex(hex){
+  const clean = String(hex || '').toLowerCase();
+  if (clean.includes('06052b81040022')) return 'secp384r1';
+  if (clean.includes('06082a8648ce3d030107')) return 'prime256v1';
+  if (clean.includes('06052b81040023')) return 'secp521r1';
+  return 'Unknown';
+}
+
+function detectPublicKeyHexFromCsrHex(hex){
+  const clean = String(hex || '').toLowerCase();
+  const marker = '06072a8648ce3d0201';
+  const idx = clean.indexOf(marker);
+  if (idx === -1) return '';
+  const bitString = clean.indexOf('03', idx);
+  if (bitString === -1) return '';
+  return clean.slice(bitString);
+}
+
 function buildDecoderPolicy(csrInfo){
   const checks = [];
   const add = (item, detected, expected, ok, note='') => checks.push({item, detected, expected, ok, note});
@@ -1366,10 +1390,9 @@ function renderPolicySection(policyChecks){
 }
 
 function renderCSR(pem){
-  const csr = new KJUR.asn1.csr.CertificationRequest();
-  csr.readCSRPEM(pem);
   const info = KJUR.asn1.csr.CSRUtil.getParam(pem, true);
-  const subject = formatNameArray(info.subject?.str ? [] : info.subject?.array || []);
+  const csrHex = b64tohex(pemtoB64(pem));
+  const subject = info.subject?.str ? parseSubjectString(info.subject.str) : formatNameArray(info.subject?.array || []);
   const extReq = info.extreq || info.extReq || [];
   const sans = [];
   let keyUsage = [];
@@ -1388,14 +1411,15 @@ function renderCSR(pem){
     }
   });
 
-  const pubKey = KEYUTIL.getKey(info.sbjpubkey);
-  const pubHex = pubKey.pubKeyHex || '';
-  const curveName = pubKey.curveName || curveNameFromKeyHex(pubHex);
-  const keyBits = /secp384r1/i.test(curveName) ? '384-bit' : (pubHex ? `${Math.floor((pubHex.length - 2) / 2 * 4 / 2)}-bit` : 'Unknown');
-  const pubAlgo = pubKey.type === 'EC' ? 'ECC' : (pubKey.type || 'Unknown');
+  const isEc = csrHex.toLowerCase().includes('06072a8648ce3d0201');
+  const curveName = detectCurveFromHex(csrHex);
+  const keyBits = curveName === 'secp384r1' ? '384-bit' : (curveName === 'prime256v1' ? '256-bit' : (curveName === 'secp521r1' ? '521-bit' : 'Unknown'));
+  const pubAlgo = isEc ? 'ECC' : 'Unknown';
   const sigAlg = oidLabel(info.sigalg || info.sigalgfield || info.sigalgoid || 'Unknown');
-  const verified = KJUR.asn1.csr.CSRUtil.verifySignature(csr);
-  const fpHex = KJUR.crypto.Util.hashHex(b64tohex(pemtoB64(pem)), 'sha256');
+  let verified = false;
+  try { verified = KJUR.asn1.csr.CSRUtil.verifySignature(pem); } catch (e) { verified = false; }
+  const fpHex = KJUR.crypto.Util.hashHex(csrHex, 'sha256');
+  const pubHex = detectPublicKeyHexFromCsrHex(csrHex);
   const policyChecks = buildDecoderPolicy({ pubkeyAlgorithm: pubAlgo, curveName, signatureAlgorithm: sigAlg, sans });
 
   results.innerHTML = `
@@ -1403,7 +1427,7 @@ function renderCSR(pem){
       <h2 style="margin:0 0 8px 0;">Decoded ECC CSR</h2>
       <div class="decoder-meta">
         <span class="decoder-chip">Certificate Signing Request</span>
-        ${/^EC/i.test(pubAlgo) ? '<span class="decoder-badge decoder-badge-valid">✅ ECC</span>' : '<span class="decoder-badge decoder-badge-expired">❌ Non-ECC</span>'}
+        ${isEc ? '<span class="decoder-badge decoder-badge-valid">✅ ECC</span>' : '<span class="decoder-badge decoder-badge-expired">❌ Non-ECC</span>'}
       </div>
       ${decoderSection('Subject', `
         <div class="decoder-kv-grid">
